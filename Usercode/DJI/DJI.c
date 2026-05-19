@@ -4,6 +4,10 @@
 DJI_t hDJI[8];
 //使用DJI init前需要指定motorType
 void DJI_Init(){
+	hDJI[0].motorType = M2006;
+	hDJI[1].motorType = M2006;
+	hDJI[2].motorType = M3508;
+	hDJI[3].motorType = M3508;
 	for (int i = 0; i < 8; i++)
     {
 			if(hDJI[i].motorType == M3508){

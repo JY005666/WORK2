@@ -55,76 +55,21 @@ void speedServo(float ref, DJI_t * motor){
 }
 
 
-uint16_t b=1;
 
-uint16_t distance_offset=0;
-
-void Offset(void){
-    // 等待激光雷达接收到有效数据（distance_aver != 0 且置信度足够）
-    uint32_t start = HAL_GetTick();
-    while (lidar.distance_aver == 0.0f && (HAL_GetTick() - start) < 1000) {
-        HAL_Delay(10);
-    }
-
-    // 采样若干次，取中值以抗脉冲噪声；带超时保护
-    uint16_t samples[DIST_OFFSET_SAMPLE_COUNT];
-    int collected = 0;
-    start = HAL_GetTick();
-    while (collected < DIST_OFFSET_SAMPLE_COUNT && (HAL_GetTick() - start) < DIST_OFFSET_TIMEOUT_MS) {
-        // 使用 distance_aver（12次均值），且只记录有效值
-        int16_t val = (int16_t)lidar.distance_aver;
-        if (val > 0) {  // 只采有效数据
-            samples[collected++] = (uint16_t)val;
-        }
-        HAL_Delay(5);
-    }
-
-    if (collected > 0) {
-        // 计算中值
-        uint16_t tmp[DIST_OFFSET_SAMPLE_COUNT];
-        for (int i = 0; i < collected; i++) tmp[i] = samples[i];
-        for (int i = 0; i < collected - 1; i++) {
-            for (int j = i + 1; j < collected; j++) {
-                if (tmp[j] < tmp[i]) {
-                    uint16_t t = tmp[i]; tmp[i] = tmp[j]; tmp[j] = t;
-                }
-            }
-        }
-        distance_offset = tmp[collected/2];
-    } else {
-        // 实在没采到有效数据，用当前单点值兜底
-        distance_offset = (uint16_t)lidar.distance;
-    }
-}
-
-/**
- * @brief  距离伺服函数（双环级联 PID，针对抖动问题优化）
+/** 
  * @param  target_distance  目标距离（mm），正值远离、负值靠近
- * @param  motor1           被控电机指针
- * @note   优化点：
- *         1. 使用 lidar.distance_aver（12次均值）替代单点值
- *         2. 减小 EMA 滤波系数至 0.08，增强抗噪
- *         3. 增加位置死区判断，目标附近停止控制输出
- *         4. 严格限速（10rpm/周期），加速平滑
- *         5. 增大速度死区至 20rpm，避免低速振荡
- *         6. 速度环 ref 用独立变量缓存，不与 PID 输出耦合
+ * @param  motor 被控电机指针
+
  */
-void Distance_servo(float target_distance, DJI_t * motor1) {
+void Distance_servo(float target_distance, DJI_t * motor) {
     // ---- 1. 位置环（外环）----
-    motor1->posPID.ref = target_distance;
+    motor->posPID.ref = target_distance;
+    motor->posPID.fdb = lidar.distance_aver;
+    PID_Calc(&motor->posPID);
 
-    motor1->posPID.fdb = (float)distance_offset - lidar.distance_aver; 
-
-
-    PID_Calc(&motor1->posPID);
-
-
-    // 赋值给速度环目标
-    motor1->speedPID.ref = motor1->posPID.output;
-
-    // ---- 3. 速度环（内环）----
-    motor1->speedPID.fdb = motor1->FdbData.rpm;
-    PID_Calc(&motor1->speedPID);
+    motor->speedPID.ref = motor->posPID.output;
+    motor->speedPID.fdb = motor->FdbData.rpm;
+    PID_Calc(&motor->speedPID);
 
 }
 
