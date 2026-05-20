@@ -12,6 +12,7 @@
 #include"DJI.h"
 #include"Usercan.h"
 #include"Caculate.h"
+#include"SMS_STS.h"
 
 
 #include "string.h"
@@ -21,5 +22,7 @@
  
 #include "DistanceUpdate.h"
 #include"Upperservo.h"
+#include"UpperClaw.h"
+#include"UpperState.h"
 
 #endif // __UPPERSTART_H__

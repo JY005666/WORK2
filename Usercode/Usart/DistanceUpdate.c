@@ -19,11 +19,10 @@ void UartUpdateTask(void *argument)
 
 void DistanceUpdate_Start()
 {
-    osThreadId_t DistanceUpdateHandle;
     const osThreadAttr_t DistanceUpdate_attributes = {
         .name       = "DistanceUpdate",
-        .stack_size = 128 * 4,
+        .stack_size = 128 * 5,
         .priority   = (osPriority_t)osPriorityAboveNormal,
     };
-    DistanceUpdateHandle = osThreadNew(UartUpdateTask, NULL, &DistanceUpdate_attributes);
+    (void)osThreadNew(UartUpdateTask, NULL, &DistanceUpdate_attributes);
 }

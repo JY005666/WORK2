@@ -16,8 +16,8 @@ void DJI_Init(){
 				hDJI[i].speedPID.KI = 0.2;
 				hDJI[i].speedPID.KD = 5;
 				hDJI[i].speedPID.outputMax = 4000;
-				hDJI[i].posPID.KP =80.0f;
-				hDJI[i].posPID.KI = 10.0f;
+				hDJI[i].posPID.KP =6.0f;
+				hDJI[i].posPID.KI = 0.0f;
 				hDJI[i].posPID.KD = 0.0f;
 				hDJI[i].posPID.outputMax = 5000;
 			}
@@ -28,10 +28,10 @@ void DJI_Init(){
 					hDJI[i].speedPID.KD = 5;
 					hDJI[i].speedPID.outputMax = 4000;
 					// 距离伺服场景：增大 KP 提高响应，加入 KD 增加阻尼抑制振荡
-					hDJI[i].posPID.KP=5.0f;      // 原10.0，增大以克服摩擦死区
-					hDJI[i].posPID.KI =0.001f;       // 暂不开启积分（防止积分饱和和超调）
+					hDJI[i].posPID.KP=40.0f;      // 原10.0，增大以克服摩擦死区
+					hDJI[i].posPID.KI =0.084f;       // 暂不开启积分（防止积分饱和和超调）
 					hDJI[i].posPID.KD = 0.0f;       // 新增微分项，增加阻尼抑制抖动
-					hDJI[i].posPID.outputMax = 3000; // 降低最大输出，防止过冲（原5000）
+					hDJI[i].posPID.outputMax = 5000; // 降低最大输出，防止过冲（原5000）
 					hDJI[i].posPID.outputMin = 30.0f; // 新增最小输出死区，避免零位附近颤振
 			}
 
