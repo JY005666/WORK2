@@ -24,5 +24,6 @@
 #include"Upperservo.h"
 #include"UpperClaw.h"
 #include"UpperState.h"
+#include"UpperTest.h"
 
 #endif // __UPPERSTART_H__

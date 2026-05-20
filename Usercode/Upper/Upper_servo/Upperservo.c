@@ -23,3 +23,13 @@ void Upper_Servo_Start(void)
     };
     (void)osThreadNew(Upper_Servo_Task, NULL, &Upper_Servo_attributes);
 }
+
+void Servo_test(void){
+    for(;;){
+        positionServo(-510.0f,&hDJI[2]);
+        Distance_servo(1500,&hDJI[0]);
+        CanTransmit_DJI_1234(&hcan1,0,0,hDJI[2].speedPID.output,0);
+        osDelay(1);
+    }
+
+}
