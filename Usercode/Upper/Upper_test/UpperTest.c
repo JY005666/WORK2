@@ -3,9 +3,9 @@
 void Upper_Test_Task(void *argument){
     osDelay(100);
     for(;;){
-        positionServo(50.0f,&hDJI[2]);
+        positionServo(-64.0f,&hDJI[2]);
         Distance_servo(1500.0f,&hDJI[0]);
-        CanTransmit_DJI_1234(&hcan1,0,0,hDJI[2].speedPID.output,0);
+        CanTransmit_DJI_1234(&hcan1,0,0,hDJI[2].speedPID.output,-3100);
         osDelay(1);
     }
 }

@@ -15,7 +15,7 @@ void DJI_Init(){
 				hDJI[i].speedPID.KP = 12;
 				hDJI[i].speedPID.KI = 0.2;
 				hDJI[i].speedPID.KD = 5;
-				hDJI[i].speedPID.outputMax = 4000;
+				hDJI[i].speedPID.outputMax = 6000;
 				hDJI[i].posPID.KP =10.0f;
 				hDJI[i].posPID.KI = 0.00017f;
 				hDJI[i].posPID.KD = 0.0f;
@@ -29,7 +29,7 @@ void DJI_Init(){
 					hDJI[i].speedPID.outputMax = 4000;
 					// 距离伺服场景：增大 KP 提高响应，加入 KD 增加阻尼抑制振荡
 					hDJI[i].posPID.KP=40.0f;      // 原10.0，增大以克服摩擦死区
-					hDJI[i].posPID.KI =0.084f;       // 暂不开启积分（防止积分饱和和超调）
+					hDJI[i].posPID.KI =0.080f;       // 暂不开启积分（防止积分饱和和超调）
 					hDJI[i].posPID.KD = 0.0f;       // 新增微分项，增加阻尼抑制抖动
 					hDJI[i].posPID.outputMax = 5000; // 降低最大输出，防止过冲（原5000）
 					hDJI[i].posPID.outputMin = 30.0f; // 新增最小输出死区，避免零位附近颤振
@@ -113,4 +113,10 @@ HAL_StatusTypeDef DJI_CanMsgDecode(uint32_t Stdid, uint8_t* fdbData){
 		return HAL_OK;
 	} 
 	return HAL_ERROR;
+}
+
+void pid_reset(float kp, float ki, float kd, DJI_t *hDJI){
+	hDJI->posPID.KP = kp;
+	hDJI->posPID.KI = ki;
+	hDJI->posPID.KD = kd;
 }
