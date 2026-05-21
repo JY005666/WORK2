@@ -24,6 +24,7 @@ void Box_Init(void){
     box[4].position = RIGHT_2;
 
     //视觉识别
+    bean[2].target_position = MIDDLE_0;
 
 }
 void Bean_Target_Set(void){
@@ -83,25 +84,31 @@ void Upper_State_Task(void *arg){
                 }
             }
         }
-        //放置豆子
         if(stage_flag == 30){
-            par.target_distance = 2259.0f;
-            if(lidar.distance_aver>1800.0f){
-                // Motor_State_Reset(&hDJI[2]);
-                pid_reset(10.0,0.00017,0.0, &hDJI[2]);
-                par.degree_chassis = -546.0f;
-                if((abs(hDJI[2].AxisData.AxisAngle_inDegree+546.0f)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
-                    par.torque_offset = 0;
-                    if(hDJI[3].AxisData.AxisAngle_inDegree  >-60.0f){
-                        WritePosEx(1,2200,1000,100);
-                        stage_flag = 40;
+            switch(bean[2].target_position){
+                case LEFT_2: break;
+                case LEFT_1: break;
+                case MIDDLE: {
+                    par.target_distance = 2259.0f;
+                    if(lidar.distance_aver>1800.0f){
+                        pid_reset(10.0,0.00017,0.0, &hDJI[2]);
+                        par.degree_chassis = -546.0f;
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree+546.0f)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.torque_offset = 200;
+                        }
+                        if(hDJI[3].AxisData.AxisAngle_inDegree  >-180.0f){
+                            WritePosEx(1,2200,1000,100);
+                            stage_flag = 40;
+                        }
                     }
-                }
+                } break;
+                case RIGHT_1: break;
+                case RIGHT_2: break;
             }
         }
         if(stage_flag == 40){
             par.torque_offset = -2500;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -250.0f){
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -400.0f){
                 par.torque_offset = -2000;
             }
         }
