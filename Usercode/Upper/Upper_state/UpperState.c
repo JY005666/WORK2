@@ -57,7 +57,7 @@ void Upper_State_Task(void *arg){
                     par.degree_chassis = 0.0f;
                     if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree)<1.0f)){
                         WritePosEx(1,1200,1000,100);
-                        WritePosEx(2,850,1000,100);
+                        WritePosEx(2,1700,1000,100);
                         stage_flag = 10;
                     }
                 }
@@ -117,15 +117,16 @@ void Upper_State_Task(void *arg){
                     }
                 }break;
                 case MIDDLE: {
-                    par.target_distance = 2215.0f;
+                    WritePosEx(2,1350,1000,100);
+                    par.target_distance = 2275.0f;
                     if(lidar.distance_aver>1800.0f){
                         pid_reset(10.0,0.00017,0.0, &hDJI[2]);
-                        par.degree_chassis = -546.0f;
+                        par.degree_chassis = -542.0f;
                         if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<3.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
                             par.torque_offset = 200;
                         }
                         if(hDJI[3].AxisData.AxisAngle_inDegree  >-180.0f){
-                            WritePosEx(1,1600,1000,100);
+                            WritePosEx(1,1650,1000,100);
                             stage_flag = 40;
                         }
                     }
@@ -165,11 +166,11 @@ void Upper_State_Task(void *arg){
             if(hDJI[3].AxisData.AxisAngle_inDegree < -500.0f){
                 par.torque_offset = -1300;
                 pid_reset(6.0,0.000005,0.5, &hDJI[2]);
-                par.degree_chassis = -80.0f;
-                par.target_distance = 180.0f;
+                par.degree_chassis = -88.0f;
+                par.target_distance = 171.0f;
                 if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree)<1.0f)){
                     WritePosEx(1,1200,1000,100);
-                    WritePosEx(2,850,1000,100);
+                    WritePosEx(2,1300,1000,100);
                     stage_flag = 50;
                 }
             }
@@ -241,15 +242,16 @@ void Upper_State_Task(void *arg){
                     }
                 } break;
                 case RIGHT_1: {
-                    par.target_distance = 2286.0f;
+                    WritePosEx(1,2000,1600,100);
+                    par.target_distance = 2400.0f;
                     if(lidar.distance_aver>1800.0f){
                         pid_reset(20.0,0,0, &hDJI[2]);
-                        par.degree_chassis = -454.0f;
+                        par.degree_chassis = -470.0f;
                         if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
                             par.torque_offset = 200;
                         }
                         if(hDJI[3].AxisData.AxisAngle_inDegree  >-180.0f){
-                            WritePosEx(1,00,1600,100);
+                            WritePosEx(1,1600,1600,100);
                             stage_flag = 80;
                         }
                     } 
@@ -275,11 +277,11 @@ void Upper_State_Task(void *arg){
             if(hDJI[3].AxisData.AxisAngle_inDegree < -500.0f){
                 par.torque_offset = -1300;
                 pid_reset(6.0,0.000005,0.5, &hDJI[2]);
-                par.degree_chassis = -961.0f;
-                par.target_distance = 196.0f;
+                par.degree_chassis = 88.0f;
+                par.target_distance = 175.0f;
                 if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree)<1.0f)){
                     WritePosEx(1,1200,1000,100);
-                    WritePosEx(2,850,1000,100);
+                    WritePosEx(2,2050,1000,100);
                     stage_flag = 90;
                 }
             }
@@ -322,10 +324,11 @@ void Upper_State_Task(void *arg){
                     }
                 }break;
                 case LEFT_1: {
-                    par.target_distance = 2291.0f;
+                    WritePosEx(2,1400,1000,100);
+                    par.target_distance = 2400.0f;
                     if(lidar.distance_aver>1800.0f){
                         pid_reset(10.0,0.00017,0.0, &hDJI[2]);
-                        par.degree_chassis = -1680.0f;
+                        par.degree_chassis = -500.0f;
                         if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
                             par.torque_offset = 200;
                         }
@@ -380,7 +383,6 @@ void Upper_State_Task(void *arg){
             }
         }
 
-        
         osDelay(2);
     }
 }
