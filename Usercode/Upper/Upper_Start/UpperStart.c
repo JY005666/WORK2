@@ -7,6 +7,9 @@ void StartDefaultTask(void *argument){
     osDelay(4000);//等待4s，方便烧录
 
     DJI_Init();//初始化电机参数
+    Bean_Init();//初始化豆子参数
+    Box_Init(); //初始化盒子参数
+    Bean_Target_Set();
     CANFilterInit(&hcan1);  //初始化滤波器
     init_paramater(&par);
     //初始化夹爪两个舵机
