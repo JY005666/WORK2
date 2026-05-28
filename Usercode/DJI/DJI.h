@@ -2,6 +2,7 @@
 #define DJI_H
 
 #include "can.h"
+// #include "stdlib.h/"
 
 #define LAST 0
 #define NOW 1
@@ -63,7 +64,7 @@ extern DJI_t hDJI[8];
 
 void DJI_Init();
 
-void pid_reset(float kp, float ki, float kd, DJI_t *hDJI);
+void pid_reset(float degree_chassis);
 
 //DJI01大疆3508，DJI234大疆2006
 void CanTransmit_DJI_1234(CAN_HandleTypeDef *hcanx, int16_t cm1_iq,int16_t cm2_iq,int16_t cm3_iq,int16_t cm4_iq);

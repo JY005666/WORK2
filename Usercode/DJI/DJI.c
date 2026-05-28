@@ -1,5 +1,5 @@
 #include"DJI.h"
-
+#include"stdlib.h"
 
 DJI_t hDJI[8];
 //使用DJI init前需要指定motorType
@@ -15,9 +15,9 @@ void DJI_Init(){
 				hDJI[i].speedPID.KP = 12;
 				hDJI[i].speedPID.KI = 0.2;
 				hDJI[i].speedPID.KD = 5;
-				hDJI[i].speedPID.outputMax = 6000;
+				hDJI[i].speedPID.outputMax = 8000;
 				hDJI[i].posPID.KP =10.0f;
-				hDJI[i].posPID.KI = 0.00017f;
+				hDJI[i].posPID.KI = 0.0f;
 				hDJI[i].posPID.KD = 0.0f;
 				hDJI[i].posPID.outputMax = 5000;
 			}
@@ -115,8 +115,14 @@ HAL_StatusTypeDef DJI_CanMsgDecode(uint32_t Stdid, uint8_t* fdbData){
 	return HAL_ERROR;
 }
 
-void pid_reset(float kp, float ki, float kd, DJI_t *hDJI){
-	hDJI->posPID.KP = kp;
-	hDJI->posPID.KI = ki;
-	hDJI->posPID.KD = kd;
+void pid_reset(float degree_chassis){
+	if(abs(degree_chassis-hDJI[2].AxisData.AxisAngle_inDegree)<500.0F){
+		hDJI[2].posPID.KP = 10.0f;
+		hDJI[2].posPID.KI = 0.0f;
+		hDJI[2].posPID.KD = 0.0f;
+	} else if(abs(degree_chassis-hDJI[2].AxisData.AxisAngle_inDegree)<1000.0F){
+		hDJI[2].posPID.KP = 5.0f;
+		hDJI[2].posPID.KI = 0.0f;
+		hDJI[2].posPID.KD = 0.0f;
+	} 
 }

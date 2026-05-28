@@ -1,5 +1,6 @@
 ﻿#include"UpperStart.h"
 void StartDefaultTask(void *argument){
+    // while(1){ printf("1");}
     // while(1){osDelay(100);}
     STP23L_Init(&huart1); // 开启距离传感接收中断
     DistanceUpdate_Start(); // 开启距离传感更新任务

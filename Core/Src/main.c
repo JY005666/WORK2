@@ -95,7 +95,7 @@ int main(void)
   MX_CAN1_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-  
+  // while(1){printf("Hello World\n");}
   /* USER CODE END 2 */
 
   /* Init scheduler */
