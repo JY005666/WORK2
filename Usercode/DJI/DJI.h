@@ -64,7 +64,7 @@ extern DJI_t hDJI[8];
 
 void DJI_Init();
 
-void pid_reset(float degree_chassis);
+void pid_reset(DJI_t *motor,float kp,float ki,float kd);
 
 //DJI01大疆3508，DJI234大疆2006
 void CanTransmit_DJI_1234(CAN_HandleTypeDef *hcanx, int16_t cm1_iq,int16_t cm2_iq,int16_t cm3_iq,int16_t cm4_iq);

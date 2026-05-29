@@ -36,9 +36,11 @@ void Claw_Init(uint8_t servoID){
 }
 void Claw_test(){
     // WritePosEx(1,1200,1000,100);
-    WritePosEx(2,1800,1000,100);
+    // WritePosEx(2,1900,1000,100);
     // osDelay(1500);
     WritePosEx(1,2700,1000,100);
     osDelay(1500);
-    WritePosEx(1,1900,1000,100);
+    WritePosEx(1,1700,1000,100);
 }
+
+//夹爪角度1100，750，1500，

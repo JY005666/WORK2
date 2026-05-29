@@ -115,14 +115,8 @@ HAL_StatusTypeDef DJI_CanMsgDecode(uint32_t Stdid, uint8_t* fdbData){
 	return HAL_ERROR;
 }
 
-void pid_reset(float degree_chassis){
-	if(abs(degree_chassis-hDJI[2].AxisData.AxisAngle_inDegree)<500.0F){
-		hDJI[2].posPID.KP = 10.0f;
-		hDJI[2].posPID.KI = 0.0f;
-		hDJI[2].posPID.KD = 0.0f;
-	} else if(abs(degree_chassis-hDJI[2].AxisData.AxisAngle_inDegree)<1000.0F){
-		hDJI[2].posPID.KP = 5.0f;
-		hDJI[2].posPID.KI = 0.0f;
-		hDJI[2].posPID.KD = 0.0f;
-	} 
+void pid_reset(DJI_t *motor,float kp,float ki,float kd){
+		motor->posPID.KP = kp;
+		motor->posPID.KI = ki;
+		motor->posPID.KD = kd;
 }
