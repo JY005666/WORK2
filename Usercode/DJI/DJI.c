@@ -26,7 +26,7 @@ void DJI_Init(){
 					hDJI[i].speedPID.KP = 12;
 					hDJI[i].speedPID.KI = 0.1;
 					hDJI[i].speedPID.KD = 5;
-					hDJI[i].speedPID.outputMax = 8000;
+					hDJI[i].speedPID.outputMax = 6000;
 					// 距离伺服场景：增大 KP 提高响应，加入 KD 增加阻尼抑制振荡
 					hDJI[i].posPID.KP=40.0f;      // 原10.0，增大以克服摩擦死区
 					hDJI[i].posPID.KI =0.080f;       // 暂不开启积分（防止积分饱和和超调）

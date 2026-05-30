@@ -48,10 +48,10 @@ void init_paramater(paramater *par){
 void Upper_State_Task(void *arg){
     for(;;){
         if(stage_flag == 0){//到达中间豆子抓取位置，张开爪子
-            par.torque_offset = -2700;
+            par.torque_offset = -2000;
             par.degree_chassis = 60.0f;
             par.target_distance = 575.0f;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -580.0f){
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -540.0f){
                 par.torque_offset = -1300;
                 if(lidar.distance_aver < 1000.0){
                     par.degree_chassis = 0.0f;
@@ -65,7 +65,7 @@ void Upper_State_Task(void *arg){
         }
         if(stage_flag == 10){//向下抓取
             osDelay(300);
-            par.torque_offset = 1300;
+            par.torque_offset = 1600;
             osDelay(800);
             WritePosEx(1,1700,1000,100);
             osDelay(800);
@@ -78,10 +78,10 @@ void Upper_State_Task(void *arg){
                 par.torque_offset = -3000;
                 // Motor_State_Reset(&hDJI[2]);
                 par.degree_chassis = -630.0f;
-                if(hDJI[2].AxisData.AxisAngle_inDegree<-580.0f){
+                if(hDJI[2].AxisData.AxisAngle_inDegree<-600.0f){
                     stage_flag = 30;
                     Motor_State_Reset(&hDJI[0]);
-                    CanTransmit_DJI_1234(&hcan1,0,0,0,par.torque_offset);
+                    Motor_State_Reset(&hDJI[2]);
                 }
             }
         }
@@ -94,14 +94,16 @@ void Upper_State_Task(void *arg){
                 case MIDDLE: {
                     WritePosEx(2,1100,1000,100);
                     par.target_distance = 2275.0f;
+                    pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
                     if(lidar.distance_aver>1800.0f){
-                        
-                        par.degree_chassis = -555.0f;
+                        par.degree_chassis = -550.0f;
                         if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
-                            par.torque_offset = 500;
+                            par.torque_offset = 1000;
                         }
-                        if(hDJI[3].AxisData.AxisAngle_inDegree  >-250.0f){
+                        if(hDJI[3].AxisData.AxisAngle_inDegree  >-400.0f){
                             WritePosEx(1,2300,1000,100);
+                            Motor_State_Reset(&hDJI[0]);
+                            Motor_State_Reset(&hDJI[2]);
                             stage_flag = 40;
                         }
                     }
@@ -117,9 +119,9 @@ void Upper_State_Task(void *arg){
             if(hDJI[3].AxisData.AxisAngle_inDegree < -580.0f){
                 par.torque_offset = -1300;
                 
-                par.degree_chassis = -89.0f;
+                par.degree_chassis = -100.0f;
                 pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
-                par.target_distance = 169.0f;
+                par.target_distance = 159.0f;
                 if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)){
                     WritePosEx(1,2700,1000,100);
                     WritePosEx(2,750,1000,100);
@@ -129,7 +131,7 @@ void Upper_State_Task(void *arg){
         }
         if(stage_flag == 50){//抓取
             osDelay(300);
-            par.torque_offset = 1300;
+            par.torque_offset = 1700;
             osDelay(800);
             WritePosEx(1,1700,1000,100);
             osDelay(800);
