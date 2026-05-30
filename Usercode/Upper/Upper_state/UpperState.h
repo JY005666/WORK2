@@ -38,7 +38,7 @@ typedef struct{
 typedef struct{
     float target_distance;
     float degree_chassis;
-    int torque_offset; // 控制升降的3508力矩补偿值
+    float degree_claw; 
 } paramater;
 
 

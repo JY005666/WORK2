@@ -37,10 +37,10 @@ void Claw_Init(uint8_t servoID){
 void Claw_test(){
     // WritePosEx(1,1200,1000,100);
     // WritePosEx(2,1900,1000,100);
-    WritePosEx(1,1850,1000,100);
-    osDelay(1500);
-    WritePosEx(1,800,1000,100);
-    osDelay(1500);
+    // WritePosEx(1,1850,1000,100);
+    // osDelay(1500);
+    // WritePosEx(1,800,1000,100);
+    // osDelay(1500);
     // while(1){
     // for(int i=0;i<1000;i++){  
     //     CanTransmit_DJI_1234(&hcan1,0,0,0,200);
