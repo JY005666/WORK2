@@ -51,10 +51,10 @@ void Upper_State_Task(void *arg){
             pid_reset(&hDJI[3], 5.0f, 0.0f, 0.0f);
             par.degree_claw = -600.0f;
             par.degree_chassis = 60.0f;
-            par.target_distance = 575.0f;
+            par.target_distance = 598.0f;
             if(lidar.distance_aver < 700.0){
-                par.degree_chassis = 0.0f;
-                if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree)<1.0f)&&(abs(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw)<5.0f)){
+                par.degree_chassis = 4.0f;
+                if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<0.5f)){
                     WritePosEx(1,1850,1000,100);
                     WritePosEx(2,1100,1000,100);
                     stage_flag = 10;
@@ -63,10 +63,12 @@ void Upper_State_Task(void *arg){
         }
         if(stage_flag == 10){//向下抓取
             osDelay(300);
-            par.degree_claw = -325.0f;
-            if(abs(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw)<3.0f){
-                WritePosEx(1,800,1000,100);
-                osDelay(800);
+            par.degree_claw = -200.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree>-320.0f){
+                WritePosEx(1,700,1000,100);
+                osDelay(1000);
+                Motor_State_Reset(&hDJI[2]);
+                Motor_State_Reset(&hDJI[0]);
                 stage_flag = 20;
             }
         }
@@ -74,10 +76,10 @@ void Upper_State_Task(void *arg){
             pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
             pid_reset(&hDJI[3], 10.0f, 0.0f, 0.0f);
             par.degree_claw = -600.0f;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -500.0f){
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -550.0f){
                 // Motor_State_Reset(&hDJI[2]);
                 par.degree_chassis = -630.0f;
-                if(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f){
+                if(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<10.0f){
                     stage_flag = 30;
                     Motor_State_Reset(&hDJI[0]);
                     Motor_State_Reset(&hDJI[2]);
@@ -87,8 +89,33 @@ void Upper_State_Task(void *arg){
         if(stage_flag == 30){
             switch(bean[2].target_position){
                 case LEFT_2: {
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2850.0f;
+                    pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                    par.degree_chassis = -800.0f;
+                    if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                        par.degree_claw = -170.0f;
+                        if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-230.0f){
+                            WritePosEx(1,1300,1000,100);
+                            stage_flag = 31;//有点极限，退后一点再转向
+                        }
+                        }
                 }break;
                 case LEFT_1: {
+                    WritePosEx(2,800,1000,100);
+                    par.target_distance = 2350.0f;
+                    pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                    par.degree_chassis = -575.0f;
+                    if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                        par.degree_claw = -170.0f;
+                        if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-230.0f){
+                            WritePosEx(1,1300,1000,100);
+                            osDelay(500);
+                            Motor_State_Reset(&hDJI[0]);
+                            Motor_State_Reset(&hDJI[2]);
+                            stage_flag = 40;
+                        }
+                    }
                 }break;
                 case MIDDLE: {
                     WritePosEx(2,1100,1000,100);
@@ -97,54 +124,97 @@ void Upper_State_Task(void *arg){
                     if(lidar.distance_aver>1800.0f){
                         par.degree_chassis = -550.0f;
                         if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
-                            // par.torque_offset = 1000;
-                        }
-                        if(hDJI[3].AxisData.AxisAngle_inDegree  >-400.0f){
-                            WritePosEx(1,1300,1000,100);
-                            Motor_State_Reset(&hDJI[0]);
-                            Motor_State_Reset(&hDJI[2]);
-                            stage_flag = 40;
+                            par.degree_claw = -190.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree>-230.0f){
+                                WritePosEx(1,1300,1000,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                stage_flag = 40;
+                            }
                         }
                     }
                 } break;
                 case RIGHT_1: {
+                    WritePosEx(2,1400,1000,100);
+                    par.target_distance = 2355.0f;
+                    if(lidar.distance_aver>1800.0f){
+                        par.degree_chassis = -463.0f;
+                        pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -170.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
+                                WritePosEx(1,1300,1600,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                stage_flag = 40;
+                            }
+                        }
+                    }
                 }break;
                 case RIGHT_2: {
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2850.0f;
+                    if(lidar.distance_aver>1800.0f){
+                        pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                        par.degree_chassis = -200.0f;
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -170.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
+                                WritePosEx(1,1300,1600,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                stage_flag = 40;
+                            }
+                        }
+                    }
                 }break;
             }
         }
-                if(stage_flag == 40){ //抓取左边豆子
-            // par.torque_offset = -2900;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -580.0f){
-                // par.torque_offset = -1300;
-                
+        if(stage_flag == 31){ //中间豆子放在最左边箱子后的特殊情况
+            par.degree_claw = -600.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -400.0f){
+                WritePosEx(1,1850,1000,100);
+                WritePosEx(2,750,1000,100);
+                par.target_distance = 169.0f;
+                if(lidar.distance_aver<1500.0f){
+                    pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
+                    par.degree_chassis = -100.0f;
+                    if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)){
+                        stage_flag = 50;
+                    }
+                }
+            }
+        }
+        if(stage_flag == 40){ //抓取左边豆子
+            par.degree_claw = -600.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -400.0f){
+                WritePosEx(1,1850,1000,100);
+                WritePosEx(2,750,1000,100);
                 par.degree_chassis = -100.0f;
                 pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
-                par.target_distance = 159.0f;
+                par.target_distance = 169.0f;
                 if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)){
-                    WritePosEx(1,2700,1000,100);
-                    WritePosEx(2,750,1000,100);
                     stage_flag = 50;
                 }
             }
         }
-                if(stage_flag == 50){//抓取
-            osDelay(300);
-            // par.torque_offset = 1700;
-            osDelay(800);
-            // WritePosEx(1,800,1000,100);
-            osDelay(800);
-            stage_flag = 60;
+        if(stage_flag == 50){//抓取
+            par.degree_claw = -100.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-125.0f){
+                WritePosEx(1,700,1000,100);
+                osDelay(1000);
+                stage_flag = 60;
+            }
         }
-                if(stage_flag == 60){
-            // par.torque_offset = -3600;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -600.0f){
-                // par.torque_offset = -3000;
-                // Motor_State_Reset(&hDJI[2]);
-                
+        if(stage_flag == 60){
+            par.degree_claw = -600.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -500.0f){
                 par.degree_chassis = -630.0f;
                 pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
-                if(hDJI[2].AxisData.AxisAngle_inDegree<-600.0f){
+                if(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<10.0f){
                     stage_flag = 70;
                     Motor_State_Reset(&hDJI[0]);
                     Motor_State_Reset(&hDJI[2]);
@@ -154,92 +224,228 @@ void Upper_State_Task(void *arg){
         if(stage_flag == 70){
             switch(bean[1].target_position){
                 case LEFT_2: {
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2850.0f;
+                    pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                    par.degree_chassis = -800.0f;
+                    if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                        par.degree_claw = -170.0f;
+                        if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-230.0f){
+                            WritePosEx(1,1300,1000,100);
+                            stage_flag = 80;//有点极限，退后一点再转向
+                        }
+                        }
                 }break;
                 case LEFT_1: {
+                    WritePosEx(2,800,1000,100);
+                    par.target_distance = 2350.0f;
+                    pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                    par.degree_chassis = -575.0f;
+                    if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                        par.degree_claw = -170.0f;
+                        if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-230.0f){
+                            WritePosEx(1,1300,1000,100);
+                            osDelay(500);
+                            Motor_State_Reset(&hDJI[0]);
+                            Motor_State_Reset(&hDJI[2]);
+                            stage_flag = 80;
+                        }
+                    }
                 }break;
                 case MIDDLE: {
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2275.0f;
+                    pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                    if(lidar.distance_aver>1800.0f){
+                        par.degree_chassis = -550.0f;
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -190.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree>-230.0f){
+                                WritePosEx(1,1300,1000,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                stage_flag = 80;
+                            }
+                        }
+                    }
                 } break;
                 case RIGHT_1: {
-                    WritePosEx(1,1400,1600,100);
+                    WritePosEx(2,1400,1000,100);
                     par.target_distance = 2355.0f;
                     if(lidar.distance_aver>1800.0f){
                         par.degree_chassis = -463.0f;
                         pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
-                                                if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
-                            // par.torque_offset = 500;
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -170.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
+                                WritePosEx(1,1300,1600,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                stage_flag = 80;
+                            }
                         }
-                        if(hDJI[3].AxisData.AxisAngle_inDegree  >-250.0f){
-                            WritePosEx(1,1300,1600,100);
-                            stage_flag = 80;
-                        }
+
                     } 
                 }break;
                 case RIGHT_2: {
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2850.0f;
+                    if(lidar.distance_aver>1800.0f){
+                        pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                        par.degree_chassis = -200.0f;
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -170.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
+                                WritePosEx(1,1300,1600,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                stage_flag = 71; //有点极限，退后一点再转向
+                            }
+                        }
+                    }
                 }break;
             }
         }
-                if(stage_flag == 80){ //抓取右边豆子
-            // par.torque_offset = -2500;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -600.0f){
-                // par.torque_offset = -1300;
-                
-                par.degree_chassis = -975.0f;
+        if(stage_flag == 71){ //左边豆子放最右边箱子的特殊情况
+            par.degree_claw = -600.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -300.0f){
+                par.target_distance = 179.0f;
+                if(lidar.distance_aver<1500.0f){
+                    pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
+                    par.degree_chassis = -992.0f;
+                    if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)){
+                        stage_flag = 90;
+                    }
+                }
+            }
+        }
+        if(stage_flag == 80){ //抓取右边豆子
+            par.degree_claw = -600.0f;
+            WritePosEx(1,1850,1000,100);
+            WritePosEx(2,1500,1000,100);
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -400.0f){
+                par.degree_chassis = -992.0f;
                 pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
-                par.target_distance = 169.0f;
+                par.target_distance = 179.0f;
                 if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)){
-                    WritePosEx(1,1850,1000,100);
-                    WritePosEx(2,1500,1000,100);
                     stage_flag = 90;
                 }
             }
         }
-                if(stage_flag == 90){//向下抓取
-            osDelay(300);
-            // par.torque_offset = 800;
-            osDelay(800);
-            WritePosEx(1,800,1000,100);
-            osDelay(800);
-            stage_flag = 100;
+        if(stage_flag == 90){//向下抓取
+            par.degree_claw = -150.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-190.0f){
+                WritePosEx(1,700,1000,100);
+                osDelay(800);
+                stage_flag = 100;
+            }
         }
-                if(stage_flag == 100){//抬升并旋转
-            // par.torque_offset = -3400;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -600.0f){
-                // par.torque_offset = -3000;
-                // Motor_State_Reset(&hDJI[2]);
-                
-                par.degree_chassis = -1700.0f;
+        if(stage_flag == 100){//抬升并旋转
+            par.degree_claw = -600.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -400.0f){
+                par.degree_chassis = -1400.0f;
                 pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
-                if(hDJI[2].AxisData.AxisAngle_inDegree<-1600.0f){
-                    stage_flag = 110;
+                if(hDJI[2].AxisData.AxisAngle_inDegree<-1200.0f){
+                    stage_flag = 101;
                     Motor_State_Reset(&hDJI[0]);
                 }
+            }
+        }
+        if(stage_flag == 101){
+            par.target_distance = 100.0f;
+            if(lidar.distance_aver>1800.0f){
+                Motor_State_Reset(&hDJI[2]);
+                Motor_State_Reset(&hDJI[0]);
+                stage_flag = 110;
             }
         }
         if(stage_flag == 110){
             switch(bean[0].target_position){
                 case LEFT_2: {
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2850.0f;
+                    pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
+                    par.degree_chassis = -800.0f;
+                    if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                        par.degree_claw = -170.0f;
+                        if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-230.0f){
+                            WritePosEx(1,1300,1000,100);
+                            while(1){};
+                        }
+                        }
                 }break;
                 case LEFT_1: {
                     WritePosEx(2,800,1000,100);
                     par.target_distance = 2350.0f;
                     if(lidar.distance_aver>1800.0f){
-                        
-                        par.degree_chassis = -1691.0f;
-                        pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
-                                                if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
-                            // par.torque_offset = 500;
-                        }
-                        if(hDJI[3].AxisData.AxisAngle_inDegree  >-250.0f){
-                            WritePosEx(1,1300,1000,100);
-                            stage_flag = 1000;
+                        par.degree_chassis = -575.0f;
+                        pid_reset(&hDJI[2], 5.0f, 0.0f, 0.0f);
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -170.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
+                                WritePosEx(1,1300,1000,100);
+                                while(1){};
+                            }
                         }
                     }
                 }break;
-                case MIDDLE: {
+                case MIDDLE: {    
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2275.0f;
+                    pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                    if(lidar.distance_aver>1800.0f){
+                        par.degree_chassis = -550.0f;
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -190.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree>-230.0f){
+                                WritePosEx(1,1300,1000,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                while(1){};
+                            }
+                        }
+                    }
                 } break;
                 case RIGHT_1: {
+                    WritePosEx(2,1400,1000,100);
+                    par.target_distance = 2355.0f;
+                    if(lidar.distance_aver>1800.0f){
+                        par.degree_chassis = -463.0f;
+                        pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -170.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
+                                WritePosEx(1,1300,1600,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                while(1){};
+                            }
+                        }
+
+                    } 
                 }break;
                 case RIGHT_2: {
+                    WritePosEx(2,1100,1000,100);
+                    par.target_distance = 2850.0f;
+                    if(lidar.distance_aver>1800.0f){
+                        pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
+                        par.degree_chassis = -200.0f;
+                        if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                            par.degree_claw = -170.0f;
+                            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
+                                WritePosEx(1,1300,1600,100);
+                                osDelay(500);
+                                Motor_State_Reset(&hDJI[0]);
+                                Motor_State_Reset(&hDJI[2]);
+                                while(1){};
+                            }
+                        }
+                    }
                 }break;
             }
         }

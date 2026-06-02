@@ -49,7 +49,7 @@ void positionServo(float ref, DJI_t * motor){
     motor->speedPID.ref = motor->posPID.output;
     motor->speedPID.fdb = motor->FdbData.rpm;
     PID_Calc(&motor->speedPID);
-
+    // 限制 speed output 绝对值 >= 800，避免输出过小导致电机蠕动
 }
 
 //速度伺服函数
