@@ -35,11 +35,11 @@ void Claw_Init(uint8_t servoID){
     printf("舵机已使能扭矩。\r\n");
 }
 void Claw_test(){
-    WritePosEx(1,1200,1000,100);
-    // WritePosEx(2,1900,1000,100);
+    WritePosEx(1,2600,1000,100);
+    WritePosEx(2,2048,1000,100);
     // WritePosEx(1,1000,1000,100);
     // osDelay(1500);
-    WritePosEx(1,700,1000,100);
+    // WritePosEx(1,700,1000,100);
     // osDelay(1500);
     // while(1){
     // for(int i=0;i<1000;i++){  
@@ -54,4 +54,5 @@ void Claw_test(){
     // }
 }
 
-//夹爪角度1100，750，1500，
+//夹取2600 张开（中位校准） 1900闭合
+//旋转 中间2048 左边豆子 1725 右边豆子 2450 R1 2350 L1 1800
