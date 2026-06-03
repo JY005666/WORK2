@@ -32,8 +32,8 @@
 #define DIST_SERVO_KP_RPM_PER_MM           45.0f
 #define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  42000.0f
 #define DIST_SERVO_MIN_MOVE_RPM            180.0f
-#define DIST_SERVO_ACCEL_RPM_PER_S         45000.0f
-#define DIST_SERVO_DECEL_RPM_PER_S         42000.0f
+#define DIST_SERVO_ACCEL_RPM_PER_S         8000.0f
+#define DIST_SERVO_DECEL_RPM_PER_S         12000.0f
 #define DIST_SERVO_DEFAULT_DT_S            0.001f
 #define DIST_SERVO_MAX_DT_S                0.020f
 #define DIST_SERVO_SENSOR_MIN_MM           20.0f

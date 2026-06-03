@@ -18,14 +18,14 @@ void StartDefaultTask(void *argument){
     Claw_Init(2);
 
     //启动线程
-    // Claw_test();
+    Claw_test();
     // Upper_Test_Start();
-    Upper_State_Start();
-    Upper_Servo_Start();
+    // Upper_State_Start();
+    // Upper_Servo_Start();
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){
-        printf("distance:%f,%f,%f,%f\r\n",lidar.distance_aver,hDJI[0].FdbData.rpm,hDJI[2].AxisData.AxisAngle_inDegree,hDJI[3].AxisData.AxisAngle_inDegree);
+        printf("distance:%f,%f,%f,%f,%f\r\n",lidar.distance_aver,hDJI[0].FdbData.rpm,hDJI[1].FdbData.rpm,hDJI[2].AxisData.AxisAngle_inDegree,hDJI[3].AxisData.AxisAngle_inDegree);
         osDelay(50);
     }
 }

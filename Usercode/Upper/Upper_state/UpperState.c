@@ -355,7 +355,7 @@ void Upper_State_Task(void *arg){
             }
         }
         if(stage_flag == 101){
-            par.target_distance = 100.0f;
+            par.target_distance = 2000.0f;
             if(lidar.distance_aver>1800.0f){
                 Motor_State_Reset(&hDJI[2]);
                 Motor_State_Reset(&hDJI[0]);
