@@ -35,11 +35,11 @@ void Claw_Init(uint8_t servoID){
     printf("舵机已使能扭矩。\r\n");
 }
 void Claw_test(){
-    WritePosEx(1,2600,1000,100);
-    WritePosEx(2,2048,1000,100);
+    WritePosEx(1,2800,1000,100);
+    // WritePosEx(2,2048,1000,100);
     // WritePosEx(1,1000,1000,100);
-    // osDelay(1500);
-    // WritePosEx(1,700,1000,100);
+    osDelay(1500);
+    WritePosEx(1,1900,1000,100);
     // osDelay(1500);
     // while(1){
     // for(int i=0;i<1000;i++){  
