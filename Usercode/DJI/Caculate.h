@@ -25,19 +25,24 @@
  * - DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM：靠近目标时的刹车曲线强度
  * - DIST_SERVO_MIN_MOVE_RPM：克服摩擦的最小爬行速度
  */
-#define DIST_SERVO_POS_TOL_MM              8.0f
+#define DIST_SERVO_POS_TOL_MM              5.0f
 #define DIST_SERVO_RPM_TOL                 60.0f
 #define DIST_SERVO_TARGET_CHANGE_TOL_MM    0.5f
 #define DIST_SERVO_MAX_SPEED_RPM           6000.0f
 #define DIST_SERVO_KP_RPM_PER_MM           45.0f
 #define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  42000.0f
-#define DIST_SERVO_MIN_MOVE_RPM            130.0f
-#define DIST_SERVO_ACCEL_RPM_PER_S         4000.0f
+#define DIST_SERVO_MIN_MOVE_RPM            300.0f      // 原130.0f，增大以克服启动静摩擦
+#define DIST_SERVO_ACCEL_RPM_PER_S         10000.0f    // 原4000.0f，增大加速斜率，更快突破静摩擦
 #define DIST_SERVO_DECEL_RPM_PER_S         8000.0f
 #define DIST_SERVO_DEFAULT_DT_S            0.001f
 #define DIST_SERVO_MAX_DT_S                0.020f
 #define DIST_SERVO_SENSOR_MIN_MM           20.0f
 #define DIST_SERVO_SENSOR_MAX_MM           5000.0f
+
+// 启动助力（Kick-Start）参数
+#define KICK_START_THRESHOLD_RPM    50.0f    // 实际转速低于此值认为"卡住"
+#define KICK_START_BOOST_RPM        800.0f   // 附加的冲击速度增量
+#define KICK_START_MAX_DURATION_MS  500      // 冲击最长持续500ms
 
 extern uint16_t distance_offset;
 
@@ -57,3 +62,5 @@ void Motor_State_Reset(DJI_t *motor);
 void Reset_DJI_Motor_Full(DJI_t *ptr);
 
 #endif
+
+

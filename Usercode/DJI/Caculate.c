@@ -69,6 +69,9 @@ typedef struct {
     float last_speed_ref;
     float last_error;
     uint32_t last_tick;
+    /* 启动助力（Kick-Start）状态 */
+    uint8_t kick_start_active;
+    uint32_t kick_start_start_tick;
 } DistanceServoPlanner_t;
 
 static DistanceServoPlanner_t distance_planner = {0};
@@ -228,6 +231,43 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
 
     desired_speed_ref = Abs_Limit_Float(desired_speed_ref, DIST_SERVO_MAX_SPEED_RPM);
     distance_planner.last_speed_ref = DistanceServo_SlewLimit(distance_planner.last_speed_ref, desired_speed_ref, dt);
+
+    /* === 启动助力 Kick-Start：当有速度指令但电机实际没转时，短时叠加冲击 === */
+    if (fabsf(desired_speed_ref) > DIST_SERVO_MIN_MOVE_RPM) {
+        /* 有运动意图 */
+        if (fabsf(motor->FdbData.rpm) < KICK_START_THRESHOLD_RPM) {
+            /* 电机没转起来 → 启动 kick-start */
+            if (!distance_planner.kick_start_active) {
+                distance_planner.kick_start_active = 1U;
+                distance_planner.kick_start_start_tick = now_tick;
+            }
+        } else {
+            /* 电机已经转起来了 → 关闭 kick-start */
+            distance_planner.kick_start_active = 0U;
+        }
+    } else {
+        /* 没有运动意图 → 关闭 kick-start */
+        distance_planner.kick_start_active = 0U;
+    }
+
+    if (distance_planner.kick_start_active) {
+        uint32_t kick_elapsed = now_tick - distance_planner.kick_start_start_tick;
+        if (kick_elapsed < KICK_START_MAX_DURATION_MS) {
+            /* 叠加一个冲击速度（方向与 desired_speed_ref 相同） */
+            float boost = Sign_Float(desired_speed_ref) * KICK_START_BOOST_RPM;
+            distance_planner.last_speed_ref += boost;
+            /* 限幅到最大速度 */
+            distance_planner.last_speed_ref = Limit_Float(
+                distance_planner.last_speed_ref,
+                -DIST_SERVO_MAX_SPEED_RPM,
+                DIST_SERVO_MAX_SPEED_RPM
+            );
+        } else {
+            /* 超时关闭 kick-start */
+            distance_planner.kick_start_active = 0U;
+        }
+    }
+    /* === Kick-Start 结束 === */
 
     if (fabsf(distance_planner.last_speed_ref) < 1.0f && desired_speed_ref == 0.0f) {
         distance_planner.last_speed_ref = 0.0f;
