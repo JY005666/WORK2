@@ -31,7 +31,7 @@
 #define DIST_SERVO_MAX_SPEED_RPM           6000.0f
 #define DIST_SERVO_KP_RPM_PER_MM           45.0f
 #define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  42000.0f
-#define DIST_SERVO_MIN_MOVE_RPM            300.0f      // 原130.0f，增大以克服启动静摩擦
+#define DIST_SERVO_MIN_MOVE_RPM            130.0f      // 原130.0f，增大以克服启动静摩擦
 #define DIST_SERVO_ACCEL_RPM_PER_S         10000.0f    // 原4000.0f，增大加速斜率，更快突破静摩擦
 #define DIST_SERVO_DECEL_RPM_PER_S         8000.0f
 #define DIST_SERVO_DEFAULT_DT_S            0.001f
@@ -62,5 +62,6 @@ void Motor_State_Reset(DJI_t *motor);
 void Reset_DJI_Motor_Full(DJI_t *ptr);
 
 #endif
+
 
 
