@@ -94,6 +94,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_CAN1_Init();
   MX_UART5_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   // while(1){printf("Hello World\n");}
   /* USER CODE END 2 */

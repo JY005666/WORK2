@@ -41,12 +41,19 @@ typedef struct{
     float degree_claw; 
 } paramater;
 
+//新建结构体，用来储存每个豆子和箱子对应的角度
+typedef struct{
+    float distance;
+    float chassis;
+    uint16_t claw_position;
+} Angle;
 
 extern Bean bean[3];
 extern Box box[5];
 
 void Bean_Init(void);
 void Box_Init(void);
+void Angle_Init(void);
 void Bean_Target_Set(void);
 void init_paramater(paramater *par);
 
