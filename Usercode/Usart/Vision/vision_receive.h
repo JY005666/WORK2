@@ -31,6 +31,8 @@ typedef struct
     uint32_t last_tick;
 } RxFrame_t;
 
+extern uint8_t g_pos[3];
+
 void Vision_Init(void);
 void Vision_Start(void);
 void Vision_Process(void);

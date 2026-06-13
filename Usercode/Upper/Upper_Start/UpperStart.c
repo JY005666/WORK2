@@ -9,6 +9,8 @@ void StartDefaultTask(void *argument){
     Vision_Start(); // 启动摄像头
 
     // data_receive(pos); 
+    // Bean_Target_Set();
+    Bean_Init(); 
 
 
     Angle_Init(); 
@@ -23,14 +25,14 @@ void StartDefaultTask(void *argument){
     CANFilterInit(&hcan1);  //初始化滤波器
     init_paramater(&par);
     //初始化夹爪两个舵机
-    Claw_Init(1);
-    Claw_Init(2);
+    Claw_Init();
+
 
     //启动线程
-    Claw_test();
+    // Claw_test();
     // Upper_Test_Start();
-    // Upper_State_Start();
-    // Upper_Servo_Start();
+    Upper_State_Start();
+    Upper_Servo_Start();
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){

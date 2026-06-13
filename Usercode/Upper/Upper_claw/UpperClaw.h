@@ -5,7 +5,7 @@
 
 
 void Upper_Claw_Start(void);
-void Claw_Init(uint8_t servoID);
+void Claw_Init(void);
 void Claw_degree_set(uint8_t degree, uint8_t servoID);
 void Claw_test(void);
 

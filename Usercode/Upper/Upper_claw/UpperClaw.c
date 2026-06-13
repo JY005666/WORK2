@@ -18,7 +18,7 @@ void Upper_Claw_Start(void)
     };
     (void)osThreadNew(Upper_Claw_Task, NULL, &Upper_Claw_attributes);
 }
-void Claw_Init(uint8_t servoID){ //开启时钟和PWM接收
+void Claw_Init(void){ //开启时钟和PWM接收
     HAL_TIM_Base_Start(&htim1);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);

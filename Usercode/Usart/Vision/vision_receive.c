@@ -10,17 +10,8 @@ extern uint8_t rx_byte;
 
 static volatile uint8_t g_done = 0;
 static volatile uint8_t g_error = 0;
-static uint8_t g_pos[3] = {0};
+uint8_t g_pos[3] = {0};
 
-// static uint8_t CalcCrc8(const uint8_t *buf, uint8_t len)
-// {
-//     uint16_t sum = 0;
-//     for (uint8_t i = 0; i < len; i++)
-//     {
-//         sum += buf[i];
-//     }
-//     return (uint8_t)(sum & 0xFF);
-// }
 
 static void Rx_Reset(void)
 {
