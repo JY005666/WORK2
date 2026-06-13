@@ -64,11 +64,17 @@ void Angle_Init(void){
 void Bean_Init(void){
     bean[0].target_position = RIGHT_1;
     bean[1].target_position = LEFT_1;
-    bean[2].target_position = MIDDLE;
+    bean[2].target_position = MIDDLE_0;
 } 
 void Bean_Target_Set(void){
     for(int i=0;i<3;i++){
-        bean[i].target_position = g_pos[2-i];
+        switch(g_pos[2-i]){
+            case 1: bean[i].target_position = LEFT_2; break;
+            case 2: bean[i].target_position = LEFT_1; break;
+            case 3: bean[i].target_position = MIDDLE_0; break;
+            case 4: bean[i].target_position = RIGHT_1; break;
+            case 5: bean[i].target_position = RIGHT_2; break;
+        }
     }
 }
 void init_paramater(paramater *par){
@@ -154,7 +160,7 @@ void Upper_State_Task(void *arg){
                         }
                     }
                 }break;
-                case MIDDLE: {
+                case MIDDLE_0: {
                     Claw_degree_set(box_middle_0.claw_angle,CLAW_UP);
                     par.target_distance = box_middle_0.distance;
                     pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
@@ -295,7 +301,7 @@ void Upper_State_Task(void *arg){
                         }
                     }
                 }break;
-                case MIDDLE: {
+                case MIDDLE_0: {
                     Claw_degree_set(box_middle_0.claw_angle,CLAW_UP);
                     par.target_distance = box_middle_0.distance;
                     pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
@@ -445,7 +451,7 @@ void Upper_State_Task(void *arg){
                         }
                     }
                 }break;
-                case MIDDLE: {
+                case MIDDLE_0: {
                     Claw_degree_set(box_middle_0.claw_angle,CLAW_UP);
                     par.target_distance = box_middle_0.distance;
                     pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);

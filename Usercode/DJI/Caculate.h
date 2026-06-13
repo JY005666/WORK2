@@ -8,7 +8,7 @@
 #include "stm32f4xx_hal.h"  // 使用 HAL_GetTick
 
 // 默认滤波/限幅参数（可根据实测调整）
-#define DIST_FILTER_ALPHA       0.08f
+#define DIST_FILTER_ALPHA       0.03f       // 滤波系数：越小越平滑，应对机构晃动
 #define DIST_OFFSET_SAMPLE_COUNT  5
 #define DIST_OFFSET_TIMEOUT_MS  200
 
@@ -25,24 +25,27 @@
  * - DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM：靠近目标时的刹车曲线强度
  * - DIST_SERVO_MIN_MOVE_RPM：克服摩擦的最小爬行速度
  */
-#define DIST_SERVO_POS_TOL_MM              5.0f
+/* 死区大小：机构有晃动时适当加大，避免电机跟着晃 */
+#define DIST_SERVO_POS_TOL_MM              10.0f
 #define DIST_SERVO_RPM_TOL                 60.0f
 #define DIST_SERVO_TARGET_CHANGE_TOL_MM    0.5f
 #define DIST_SERVO_MAX_SPEED_RPM           8000.0f
 #define DIST_SERVO_KP_RPM_PER_MM           45.0f
 #define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  42000.0f
-#define DIST_SERVO_MIN_MOVE_RPM            100.0f      // 原130.0f，增大以克服启动静摩擦
-#define DIST_SERVO_ACCEL_RPM_PER_S         10000.0f    // 原4000.0f，增大加速斜率，更快突破静摩擦
+#define DIST_SERVO_MIN_MOVE_RPM            100.0f
+#define DIST_SERVO_ACCEL_RPM_PER_S         10000.0f
 #define DIST_SERVO_DECEL_RPM_PER_S         8000.0f
 #define DIST_SERVO_DEFAULT_DT_S            0.001f
 #define DIST_SERVO_MAX_DT_S                0.020f
 #define DIST_SERVO_SENSOR_MIN_MM           20.0f
 #define DIST_SERVO_SENSOR_MAX_MM           5000.0f
+/* 到达稳定确认时间（ms）：持续在死区内这么久才标记到达 */
+#define DIST_SERVO_STABLE_MS               200
 
 // 启动助力（Kick-Start）参数
-#define KICK_START_THRESHOLD_RPM    50.0f    // 实际转速低于此值认为"卡住"
-#define KICK_START_BOOST_RPM        800.0f   // 附加的冲击速度增量
-#define KICK_START_MAX_DURATION_MS  500      // 冲击最长持续500ms
+#define KICK_START_THRESHOLD_RPM    50.0f
+#define KICK_START_BOOST_RPM        800.0f
+#define KICK_START_MAX_DURATION_MS  500
 
 extern uint16_t distance_offset;
 

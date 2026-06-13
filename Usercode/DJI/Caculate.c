@@ -65,6 +65,7 @@ typedef struct {
     DJI_t *motor;
     uint8_t initialized;
     uint8_t arrived;
+    uint8_t arrived_confirmed;      // 稳定计时确认后的到达标志
     float target_distance;
     float last_speed_ref;
     float last_error;
@@ -72,6 +73,12 @@ typedef struct {
     /* 启动助力（Kick-Start）状态 */
     uint8_t kick_start_active;
     uint32_t kick_start_start_tick;
+
+    /* 一阶低通滤波 */
+    float filtered_distance;         // 滤波后的距离值
+
+    /* 到达稳定计时 */
+    uint32_t arrived_tick;           // 进入死区的时刻
 } DistanceServoPlanner_t;
 
 static DistanceServoPlanner_t distance_planner = {0};
@@ -128,6 +135,19 @@ static float DistanceServo_GetDt(uint32_t now_tick)
     return dt;
 }
 
+/**
+ * @brief 一阶低通滤波，平滑雷达噪声
+ * @param raw      原始测量值
+ * @param filtered 上一轮滤波值（会被写回）
+ * @param alpha    滤波系数 (0~1)，越小越平滑
+ * @return 滤波后的值
+ */
+static float LowPass_Filter(float raw, float *filtered, float alpha)
+{
+    *filtered = alpha * raw + (1.0f - alpha) * (*filtered);
+    return *filtered;
+}
+
 static float DistanceServo_SlewLimit(float current_ref, float target_ref, float dt)
 {
     float slope = DIST_SERVO_ACCEL_RPM_PER_S;
@@ -153,7 +173,7 @@ uint8_t DistanceServo_IsArrived(DJI_t *motor)
 {
     if (!distance_planner.initialized) return 0;
     if (distance_planner.motor != motor) return 0;
-    return distance_planner.arrived;
+    return distance_planner.arrived_confirmed;
 }
 
 /**
@@ -172,7 +192,7 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
     uint32_t now_tick = HAL_GetTick();
     float dt = DistanceServo_GetDt(now_tick);
 
-    if (!distance_planner.initialized || distance_planner.motor != motor) {
+        if (!distance_planner.initialized || distance_planner.motor != motor) {
         memset(&distance_planner, 0, sizeof(distance_planner));
         distance_planner.motor = motor;
         distance_planner.initialized = 1U;
@@ -180,28 +200,55 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
         distance_planner.last_speed_ref = motor->speedPID.ref;
         distance_planner.last_error = target_distance - current_distance;
         distance_planner.last_tick = now_tick;
+        distance_planner.filtered_distance = current_distance; // 初始化滤波值
     }
 
     if (fabsf(target_distance - distance_planner.target_distance) > DIST_SERVO_TARGET_CHANGE_TOL_MM) {
         /* 目标改变时只更新目标，不清零 last_speed_ref，保证速度给定连续过渡 */
         distance_planner.target_distance = target_distance;
         distance_planner.arrived = 0U;
+        distance_planner.arrived_confirmed = 0U;
     }
 
-    float desired_speed_ref = 0.0f;
+        float desired_speed_ref = 0.0f;
 
     if (Distance_Is_Valid(current_distance) && Float_Is_Usable(target_distance)) {
-        float error = target_distance - current_distance;
+        /* 一阶低通滤波，平滑雷达测量值和机构晃动的影响 */
+        float filtered_distance = LowPass_Filter(
+            current_distance,
+            &distance_planner.filtered_distance,
+            DIST_FILTER_ALPHA
+        );
+
+        float error = target_distance - filtered_distance;
         float abs_error = fabsf(error);
-        float stop_error = abs_error - DIST_SERVO_POS_TOL_MM;
+
+        /* 迟滞比较器：进入死区后需更大误差才能退出，避免边界震荡 */
+        float effective_tol = DIST_SERVO_POS_TOL_MM;
+        if (distance_planner.arrived) {
+            effective_tol = DIST_SERVO_POS_TOL_MM * 1.5f;  // 退出死区阈值放大
+        }
+
+        float stop_error = abs_error - effective_tol;
         if (stop_error < 0.0f) stop_error = 0.0f;
 
-        if (abs_error <= DIST_SERVO_POS_TOL_MM) {
+        if (abs_error <= effective_tol) {
             desired_speed_ref = 0.0f;
-            if (fabsf(motor->FdbData.rpm) <= DIST_SERVO_RPM_TOL && fabsf(distance_planner.last_speed_ref) <= DIST_SERVO_RPM_TOL) {
-                distance_planner.arrived = 1U;
+
+            /* 稳定计时确认到达：持续在死区内 DIST_SERVO_STABLE_MS 毫秒才确认 */
+            if (!distance_planner.arrived) {
+                if (distance_planner.arrived_tick == 0U) {
+                    distance_planner.arrived_tick = now_tick;
+                } else if ((now_tick - distance_planner.arrived_tick) >= DIST_SERVO_STABLE_MS) {
+                    distance_planner.arrived = 1U;
+                    distance_planner.arrived_confirmed = 1U;
+                }
             }
         } else {
+            /* 退出死区：清除到达标记和计时 */
+            distance_planner.arrived = 0U;
+            distance_planner.arrived_confirmed = 0U;
+            distance_planner.arrived_tick = 0U;
             float max_speed = DIST_SERVO_MAX_SPEED_RPM;
             if (motor->posPID.outputMax > 1.0f && motor->posPID.outputMax < max_speed) {
                 max_speed = motor->posPID.outputMax;
@@ -298,11 +345,14 @@ void Distance_servo(float target_distance, DJI_t * motor) {
     motor->speedPID.ref = speed_ref;
     motor->speedPID.fdb = motor->FdbData.rpm;
 
-    if (DistanceServo_IsArrived(motor)) {
+        if (DistanceServo_IsArrived(motor)) {
+        /* 到达后：同时清理位置环和速度环的增量累加，防止积分/累加项残留导致抖动 */
         PID_Clear(&motor->speedPID);
+        PID_Clear(&motor->posPID);
         motor->speedPID.ref = 0.0f;
         motor->speedPID.fdb = motor->FdbData.rpm;
         motor->speedPID.output = 0.0f;
+        motor->posPID.output = 0.0f;
         return;
     }
 
