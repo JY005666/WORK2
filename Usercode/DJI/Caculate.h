@@ -28,7 +28,7 @@
 #define DIST_SERVO_POS_TOL_MM              5.0f
 #define DIST_SERVO_RPM_TOL                 60.0f
 #define DIST_SERVO_TARGET_CHANGE_TOL_MM    0.5f
-#define DIST_SERVO_MAX_SPEED_RPM           6000.0f
+#define DIST_SERVO_MAX_SPEED_RPM           8000.0f
 #define DIST_SERVO_KP_RPM_PER_MM           45.0f
 #define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  42000.0f
 #define DIST_SERVO_MIN_MOVE_RPM            100.0f      // 原130.0f，增大以克服启动静摩擦
