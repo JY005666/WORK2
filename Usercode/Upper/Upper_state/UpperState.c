@@ -1,6 +1,13 @@
 ﻿#include "UpperState.h"
 #include"stdio.h"
 #include"stdlib.h"
+
+#define CLAW_UP 1
+#define CLAW_DOWN 2
+#define CLAW_OPEN 105
+#define CLAW_CLOSE 0
+
+
 paramater par;
 
 uint16_t stage_flag = 0;
@@ -81,8 +88,8 @@ void Upper_State_Task(void *arg){
             }
 
             if(lidar.distance_aver < 700.0){
-                WritePosEx(1,2800,1000,100);
-                WritePosEx(2,2048,1000,100);
+                Claw_degree_set(CLAW_OPEN,CLAW_DOWN);
+                Claw_degree_set(bean_middle.claw_angle,CLAW_UP);
                 par.degree_chassis = bean_middle.chassis;
                 if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<1.0f)){
                     stage_flag = 10;
@@ -93,7 +100,7 @@ void Upper_State_Task(void *arg){
             osDelay(300);
             par.degree_claw = -250.0f;
             if(hDJI[3].AxisData.AxisAngle_inDegree>-450.0f){
-                WritePosEx(1,1900,1000,100);
+                Claw_degree_set(CLAW_CLOSE,CLAW_DOWN);
                 osDelay(1000);
                 Motor_State_Reset(&hDJI[2]);
                 Motor_State_Reset(&hDJI[0]);
@@ -117,7 +124,7 @@ void Upper_State_Task(void *arg){
         if(stage_flag == 30){
             switch(bean[2].target_position){
                 case LEFT_2: {
-                    WritePosEx(2,2048,1000,100);
+                    Claw_degree_set(box_left_2.claw_angle,CLAW_UP);
                     par.target_distance = box_left_2.distance;
                     pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
                     par.degree_chassis = box_left_2.chassis;
@@ -133,7 +140,7 @@ void Upper_State_Task(void *arg){
                         }
                 }break;
                 case LEFT_1: {
-                    WritePosEx(2,1800,1000,100);
+                    Claw_degree_set(box_left_1.claw_angle,CLAW_UP);
                     par.target_distance = box_left_1.distance;
                     pid_reset(&hDJI[2], 10.0f, 0.0f, 0.0f);
                     par.degree_chassis = box_left_1.chassis;
