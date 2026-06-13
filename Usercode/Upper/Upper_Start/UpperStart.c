@@ -8,14 +8,14 @@ void StartDefaultTask(void *argument){
     Vision_Init(); // 初始化摄像头
     Vision_Start(); // 启动摄像头
 
-    data_receive(pos); 
-    
+    // data_receive(pos); 
 
 
+    Angle_Init(); 
     STP23L_Init(&huart1); // 开启距离传感接收中断
     DistanceUpdate_Start(); // 开启距离传感更新任务
     
-    // osDelay(4000);//等待4s，方便烧录
+    osDelay(3500);//等待4s，方便烧录
 
     DJI_Init();//初始化电机参数
 
@@ -29,13 +29,13 @@ void StartDefaultTask(void *argument){
     //启动线程
     // Claw_test();
     // Upper_Test_Start();
-    // Upper_State_Start();
-    // Upper_Servo_Start();
+    Upper_State_Start();
+    Upper_Servo_Start();
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){
-        printf("pos:%d,%d,%d\r\n",pos[0],pos[1],pos[2]);
-        // printf("distance:%f,%f,%f,%f,%f\r\n",lidar.distance_aver,hDJI[0].FdbData.rpm,hDJI[1].FdbData.rpm,hDJI[2].AxisData.AxisAngle_inDegree,hDJI[3].AxisData.AxisAngle_inDegree);
+        // printf("pos:%d,%d,%d\r\n",pos[0],pos[1],pos[2]);
+        printf("distance:%f,%f,%f,%f,%f\r\n",lidar.distance_aver,hDJI[0].FdbData.rpm,hDJI[1].FdbData.rpm,hDJI[2].AxisData.AxisAngle_inDegree,hDJI[3].AxisData.AxisAngle_inDegree);
         osDelay(50);
     }
 }

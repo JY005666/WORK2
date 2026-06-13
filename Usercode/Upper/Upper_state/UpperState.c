@@ -25,12 +25,12 @@ void Angle_Init(void){
     bean_left.chassis = -100.0f;
     bean_left.claw_position = 2048;
 
-    bean_right.distance = -983.0f;
-    bean_right.chassis = 189.0f;
+    bean_right.distance = 189.0f;
+    bean_right.chassis = -983.0f;
     bean_right.claw_position = 2048;
 
-    bean_middle.distance = 4.0f;
-    bean_middle.chassis = 590.0f;
+    bean_middle.distance = 590.0f;
+    bean_middle.chassis = 4.0f;
     bean_middle.claw_position = 2048;
 
     box_left_2.distance = 2655.0f;
@@ -58,8 +58,6 @@ void Bean_Init(void){
     bean[0].position = RIGHT;
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
-    
-
 } 
 void Bean_Target_Set(void){
     for(int i=0;i<3;i++){
@@ -75,10 +73,13 @@ void init_paramater(paramater *par){
 void Upper_State_Task(void *arg){
     for(;;){
         if(stage_flag == 0){//到达中间豆子抓取位置，张开爪子
-            pid_reset(&hDJI[3], 5.0f, 0.0f, 0.0f);
-            par.degree_claw = -600.0f;
-            par.degree_chassis = 60.0f;
-            par.target_distance = bean_middle.distance;
+            if(lidar.distance_aver>700.0){
+                pid_reset(&hDJI[3], 5.0f, 0.0f, 0.0f);
+                par.degree_claw = -600.0f;
+                par.degree_chassis = 60.0f;
+                par.target_distance = bean_middle.distance;
+            }
+
             if(lidar.distance_aver < 700.0){
                 WritePosEx(1,2800,1000,100);
                 WritePosEx(2,2048,1000,100);
