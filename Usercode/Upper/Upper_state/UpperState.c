@@ -23,35 +23,35 @@ void Angle_Init(void){
 
     bean_left.distance = 174.0f;
     bean_left.chassis = -100.0f;
-    bean_left.claw_position = 2048;
+    bean_left.claw_angle = 0;
 
     bean_right.distance = 189.0f;
     bean_right.chassis = -983.0f;
-    bean_right.claw_position = 2048;
+    bean_right.claw_angle = 0;
 
     bean_middle.distance = 590.0f;
     bean_middle.chassis = 4.0f;
-    bean_middle.claw_position = 2048;
+    bean_middle.claw_angle = 0;
 
     box_left_2.distance = 2655.0f;
     box_left_2.chassis = -755.0f;
-    box_left_2.claw_position = 2048;
+    box_left_2.claw_angle = 0;
 
     box_left_1.distance = 2370.0f;
     box_left_1.chassis = -625.0f;
-    box_left_1.claw_position = 2048;
+    box_left_1.claw_angle = 0;
 
     box_middle_0.distance = 2275.0f;
     box_middle_0.chassis = -541.0f;
-    box_middle_0.claw_position = 2048;
+    box_middle_0.claw_angle = 0;
 
     box_right_1.distance = 2365.0f;
     box_right_1.chassis = -465.0f;
-    box_right_1.claw_position = 2048;
+    box_right_1.claw_angle = 0;
 
     box_right_2.distance = 2655.0f;
     box_right_2.chassis = -329.0f;
-    box_right_2.claw_position = 2048;
+    box_right_2.claw_angle = 0;
 }
 
 void Bean_Init(void){

@@ -20,6 +20,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "can.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -95,6 +96,7 @@ int main(void)
   MX_CAN1_Init();
   MX_UART5_Init();
   MX_USART2_UART_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   // while(1){printf("Hello World\n");}
   /* USER CODE END 2 */

@@ -45,7 +45,7 @@ typedef struct{
 typedef struct{
     float distance;
     float chassis;
-    uint16_t claw_position;
+    uint16_t claw_angle;
 } Angle;
 
 extern Bean bean[3];

@@ -27,10 +27,10 @@ void StartDefaultTask(void *argument){
     Claw_Init(2);
 
     //启动线程
-    // Claw_test();
+    Claw_test();
     // Upper_Test_Start();
-    Upper_State_Start();
-    Upper_Servo_Start();
+    // Upper_State_Start();
+    // Upper_Servo_Start();
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){
