@@ -1,6 +1,36 @@
 ﻿#include"Stp23L.h"
 #include <string.h>
 
+
+
+
+uint8_t rx_byte;
+RxFrame_t rx_frame;
+
+static volatile uint8_t g_done = 0;
+static volatile uint8_t g_error = 0;
+
+static uint8_t CalcCrc8(const uint8_t *buf, uint8_t len)
+{
+    uint16_t sum = 0;
+    for (uint8_t i = 0; i < len; i++)
+    {
+        sum += buf[i];
+    }
+    return (uint8_t)(sum & 0xFF);
+}
+
+static void Rx_Reset(void)
+{
+    memset(&rx_frame, 0, sizeof(rx_frame));
+    rx_frame.state = RX_WAIT_HEADER;
+    rx_frame.last_tick = HAL_GetTick();
+}
+
+
+
+
+
 // ---------- 接收缓冲区及状态机变量 ----------
 uint8_t Rxbuffer_1[195];
 
@@ -47,6 +77,76 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         };
 
         HAL_UART_Receive_IT(&huart1, usart1_rx, 1);
+    }
+    if(huart->Instance == USART2){
+        rx_frame.last_tick = HAL_GetTick();
+        switch (rx_frame.state)
+        {
+            case RX_WAIT_HEADER:
+                if (rx_byte == FRAME_HEADER)
+                    rx_frame.state = RX_WAIT_CMD;
+                break;
+
+            case RX_WAIT_CMD:
+                rx_frame.cmd = rx_byte;
+                rx_frame.state = RX_WAIT_LEN;
+                break;
+
+            case RX_WAIT_LEN:
+                if (rx_byte <= MAX_PAYLOAD_LEN)
+                {
+                    rx_frame.len = rx_byte;
+                    rx_frame.idx = 0;
+
+                    if (rx_frame.len == 0)
+                        rx_frame.state = RX_WAIT_CRC;
+                    else
+                        rx_frame.state = RX_WAIT_PAYLOAD;
+                }
+                else
+                {
+                    Rx_Reset();
+                }
+                break;
+
+            case RX_WAIT_PAYLOAD:
+                rx_frame.payload[rx_frame.idx++] = rx_byte;
+                if (rx_frame.idx >= rx_frame.len)
+                    rx_frame.state = RX_WAIT_CRC;
+                break;
+
+            case RX_WAIT_CRC:
+            {
+                rx_frame.crc_rx = rx_byte;
+                uint8_t buf[2 + MAX_PAYLOAD_LEN];
+                uint8_t used = 0;
+
+                buf[used++] = rx_frame.cmd;
+                buf[used++] = rx_frame.len;
+                for (uint8_t i = 0; i < rx_frame.len; i++)
+                    buf[used++] = rx_frame.payload[i];
+
+                if (CalcCrc8(buf, used) == rx_frame.crc_rx)
+                    rx_frame.state = RX_WAIT_TAIL;
+                else
+                    rx_frame.frame_error = 1;
+                break;
+            }
+
+            case RX_WAIT_TAIL:
+                if (rx_byte == FRAME_TAIL)
+                    rx_frame.frame_ready = 1;
+                else
+                    rx_frame.frame_error = 1;
+
+                rx_frame.state = RX_WAIT_HEADER;
+                break;
+
+                    default:
+                Rx_Reset();
+                break;
+        }
+        HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
     }
 }
 void STP_23L_Decode(uint8_t *buffer, LidarPointTypedef*lidardata) // num:指明是第几个雷达，本代码框架中范围为0-3

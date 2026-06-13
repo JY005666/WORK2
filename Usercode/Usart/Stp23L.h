@@ -3,7 +3,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "usart.h"
-
+#include "vision_receive.h"  // 引用 RxFrame_t, RxState_t 定义
 /*STP_23L数据包命令码宏定义*/
 #define PACK_GET_DISTANCE       0x02
 #define PACK_RESET_SYSTEM       0x0D
@@ -11,6 +11,9 @@
 #define PACK_ACK                0x10
 #define PACK_VERSIOM            0x14
 
+// RxFrame_t 和 RxState_t 由 vision_receive.h 提供，此处不再重复定义
+extern RxFrame_t rx_frame;
+extern uint8_t rx_byte;
 
 typedef struct{
     int16_t distance;               //测量目标距离（单位：mm）

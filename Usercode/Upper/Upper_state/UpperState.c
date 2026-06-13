@@ -59,30 +59,11 @@ void Bean_Init(void){
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
     
-    //视觉识别结果
 
 } 
-void Box_Init(void){
-    box[0].position = LEFT_2;
-    box[1].position = LEFT_1;
-    box[2].position = MIDDLE_0;
-    box[3].position = RIGHT_1;
-    box[4].position = RIGHT_2;
-
-    //视觉识别
-    bean[2].target_position = LEFT_2;
-    bean[1].target_position = RIGHT_1;
-    bean[0].target_position = RIGHT_2;
-
-}
 void Bean_Target_Set(void){
     for(int i=0;i<3;i++){
-        if(bean[i].color == YELLOW) bean[i].target_number = 1;
-        else if (bean[i].color == GREEN) bean[i].target_number = 2;
-        else if (bean[i].color == WHITE ) bean[i].target_number = 3;
-        for(int j=0;j<5;j++){
-            if(bean[i].target_number == box[j].number) bean[i].target_position = box[j].position;
-        }
+
     }
 }
 void init_paramater(paramater *par){

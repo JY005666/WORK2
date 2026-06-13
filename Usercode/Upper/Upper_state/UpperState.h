@@ -51,8 +51,6 @@ typedef struct{
 extern Bean bean[3];
 extern Box box[5];
 
-void Bean_Init(void);
-void Box_Init(void);
 void Angle_Init(void);
 void Bean_Target_Set(void);
 void init_paramater(paramater *par);
