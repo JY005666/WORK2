@@ -26,7 +26,7 @@
  * - DIST_SERVO_MIN_MOVE_RPM：克服摩擦的最小爬行速度
  */
 /* 死区大小：机构有晃动时适当加大，避免电机跟着晃 */
-#define DIST_SERVO_POS_TOL_MM              10.0f
+#define DIST_SERVO_POS_TOL_MM              5.0f
 #define DIST_SERVO_RPM_TOL                 60.0f
 #define DIST_SERVO_TARGET_CHANGE_TOL_MM    0.5f
 #define DIST_SERVO_MAX_SPEED_RPM           8000.0f
