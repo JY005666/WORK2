@@ -21,18 +21,30 @@ void DJI_Init(){
 				hDJI[i].posPID.KD = 0.0f;
 				hDJI[i].posPID.outputMax = 5000;
 			}
-			else if(hDJI[i].motorType == M2006){
+
+
+
+
+
+
+
+
+
+
+
+
+						else if(hDJI[i].motorType == M2006){
 					hDJI[i].reductionRate = 36.0f/1.0f;
 					hDJI[i].speedPID.KP = 12;
-					hDJI[i].speedPID.KI = 0.1;
+					hDJI[i].speedPID.KI = 0.0f;      // 关积分，避免到位后积分累积导致晃动
 					hDJI[i].speedPID.KD = 5;
 					hDJI[i].speedPID.outputMax = 10000;
-					// 距离伺服场景：增大 KP 提高响应，加入 KD 增加阻尼抑制振荡
-					hDJI[i].posPID.KP=40.0f;      // 原10.0，增大以克服摩擦死区
-					hDJI[i].posPID.KI =0.0f;       // 暂不开启积分（防止积分饱和和超调）
-					hDJI[i].posPID.KD = 0.0f;       // 新增微分项，增加阻尼抑制抖动
-					hDJI[i].posPID.outputMax = 8000; // 增大最大输出，提供更大的启动扭矩
-					hDJI[i].posPID.outputMin = 30.0f; // 新增最小输出死区，避免零位附近颤振
+					// 距离伺服场景
+					hDJI[i].posPID.KP=40.0f;
+					hDJI[i].posPID.KI =0.0f;
+					hDJI[i].posPID.KD = 8.0f;        // 加微分阻尼抑制到位晃动
+					hDJI[i].posPID.outputMax = 8000;
+					hDJI[i].posPID.outputMin = 30.0f;
 			}
 
         hDJI[i].encoder_resolution = 8192.0f;

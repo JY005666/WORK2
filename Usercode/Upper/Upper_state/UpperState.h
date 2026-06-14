@@ -10,7 +10,7 @@ typedef enum{
 } BeanColor;
 
 typedef enum{
-    LEFT = 0,
+    LEFT = 1,
     RIGHT,
     MIDDLE
 } BeanPosition;

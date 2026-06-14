@@ -49,6 +49,16 @@
 
 extern uint16_t distance_offset;
 
+// 云台 T 型速度规划参数（可实车微调）
+#define YAW_MAX_SPEED_DEG_PER_S    500.0f   // 最大角速度 °/s
+#define YAW_ACCEL_DEG_PER_S2       800.0f   // 角加速度 °/s²
+#define YAW_POS_TOL_DEG            1.0f     // 到位死区 ±1°
+
+// --- 云台 T 型速度规划接口 ---
+void YawServo_Reset(void);
+uint8_t YawServo_IsArrived(void);
+void Yaw_servo(float target_degree, DJI_t *motor);
+
 // --- PID 与控制接口 ---
 void PID_Calc(PID_t *pid);
 void P_Calc(PID_t *pid);

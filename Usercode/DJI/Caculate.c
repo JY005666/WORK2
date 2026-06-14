@@ -1,3 +1,5 @@
+
+
 /*pid算法和速度位置伺服*/
 
 #include "Caculate.h"
@@ -435,6 +437,115 @@ void Reset_DJI_Motor_Full(DJI_t *ptr) {
     PID_Clear(&ptr->posPID);
     PID_Clear(&ptr->speedPID);
     DistanceServo_Reset(ptr);
+}
+
+// ========== 云台 T 型速度规划（仿照示例 VelocityPlanning） ==========
+typedef struct {
+    uint8_t initialized;
+    uint8_t arrived;
+    uint8_t arrived_confirmed;
+    float target_degree;
+    float initial_angle;
+    float start_time;
+    float max_speed;
+    float accel_time;
+    float const_time;
+    float total_time;
+    float direction;
+    float last_planned_angle;
+} YawPlanner_t;
+
+static YawPlanner_t yaw_planner = {0};
+
+void YawServo_Reset(void)
+{
+    memset(&yaw_planner, 0, sizeof(yaw_planner));
+}
+
+uint8_t YawServo_IsArrived(void)
+{
+    return yaw_planner.arrived_confirmed;
+}
+
+static void Yaw_Plan_Update(float target_degree, float current_degree, uint32_t now_tick)
+{
+    if (!yaw_planner.initialized ||
+        fabsf(target_degree - yaw_planner.target_degree) > 0.5f) {
+
+        yaw_planner.target_degree = target_degree;
+        yaw_planner.initial_angle = current_degree;
+        yaw_planner.start_time = (float)now_tick;
+        yaw_planner.arrived = 0U;
+        yaw_planner.arrived_confirmed = 0U;
+        yaw_planner.last_planned_angle = current_degree;
+
+        float angle_diff = target_degree - current_degree;
+        yaw_planner.direction = (angle_diff > 0.0f) ? 1.0f : -1.0f;
+        float abs_diff = fabsf(angle_diff);
+
+        float accel_time = YAW_MAX_SPEED_DEG_PER_S / YAW_ACCEL_DEG_PER_S2;
+        float accel_dist = 0.5f * YAW_ACCEL_DEG_PER_S2 * accel_time * accel_time;
+        float const_time = (abs_diff - 2.0f * accel_dist) / YAW_MAX_SPEED_DEG_PER_S;
+
+        if (const_time > 0.0f) {
+            yaw_planner.max_speed = YAW_MAX_SPEED_DEG_PER_S;
+            yaw_planner.accel_time = accel_time;
+            yaw_planner.const_time = const_time;
+            yaw_planner.total_time = 2.0f * accel_time + const_time;
+        } else {
+            float v_peak = sqrtf(fabsf(angle_diff) * YAW_ACCEL_DEG_PER_S2);
+            yaw_planner.max_speed = v_peak;
+            yaw_planner.accel_time = v_peak / YAW_ACCEL_DEG_PER_S2;
+            yaw_planner.const_time = 0.0f;
+            yaw_planner.total_time = 2.0f * yaw_planner.accel_time;
+        }
+
+        yaw_planner.initialized = 1U;
+    }
+
+    if (yaw_planner.arrived) return;
+
+    float elapsed = ((float)now_tick - yaw_planner.start_time) * 0.001f;
+    float planned_angle;
+
+    if (elapsed >= yaw_planner.total_time) {
+        planned_angle = yaw_planner.target_degree;
+        yaw_planner.arrived = 1U;
+        yaw_planner.arrived_confirmed = 1U;
+    } else if (elapsed <= yaw_planner.accel_time) {
+        planned_angle = yaw_planner.initial_angle +
+                        yaw_planner.direction * 0.5f * YAW_ACCEL_DEG_PER_S2 * elapsed * elapsed;
+    } else if (elapsed <= yaw_planner.accel_time + yaw_planner.const_time) {
+        float t_acc = yaw_planner.accel_time;
+        float accel_dist = 0.5f * YAW_ACCEL_DEG_PER_S2 * t_acc * t_acc;
+        planned_angle = yaw_planner.initial_angle +
+                        yaw_planner.direction * (accel_dist + yaw_planner.max_speed * (elapsed - t_acc));
+    } else {
+        float t_acc = yaw_planner.accel_time;
+        float t_const = yaw_planner.const_time;
+        float accel_dist = 0.5f * YAW_ACCEL_DEG_PER_S2 * t_acc * t_acc;
+        float const_dist = yaw_planner.max_speed * t_const;
+        float t_dec = elapsed - t_acc - t_const;
+        planned_angle = yaw_planner.initial_angle +
+                        yaw_planner.direction * (
+                            accel_dist + const_dist +
+                            yaw_planner.max_speed * t_dec - 0.5f * YAW_ACCEL_DEG_PER_S2 * t_dec * t_dec
+                        );
+    }
+
+    yaw_planner.last_planned_angle = planned_angle;
+}
+
+void Yaw_servo(float target_degree, DJI_t *motor)
+{
+    if (motor == NULL) return;
+
+    uint32_t now_tick = HAL_GetTick();
+    float current_degree = motor->AxisData.AxisAngle_inDegree;
+
+    Yaw_Plan_Update(target_degree, current_degree, now_tick);
+
+    positionServo(yaw_planner.last_planned_angle, motor);
 }
 
 
