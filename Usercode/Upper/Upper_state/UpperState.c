@@ -41,25 +41,25 @@ void Angle_Init(void){
     bean_middle.chassis = -5.0f;
     bean_middle.claw_angle = 85;
 
-    box_left_2.distance = 2655.0f;
-    box_left_2.chassis = -755.0f;
-    box_left_2.claw_angle = 85;
+    box_left_2.distance = 2743.0f;
+    box_left_2.chassis = -775.0f;
+    box_left_2.claw_angle = 70;
 
-    box_left_1.distance = 2370.0f;
+    box_left_1.distance = 2380.0f;
     box_left_1.chassis = -625.0f;
     box_left_1.claw_angle = 110;
 
-    box_middle_0.distance = 2275.0f;
+    box_middle_0.distance = 2285.0f;
     box_middle_0.chassis = -541.0f;
     box_middle_0.claw_angle = 85;
 
-    box_right_1.distance = 2365.0f;
+    box_right_1.distance = 2375.0f;
     box_right_1.chassis = -465.0f;
     box_right_1.claw_angle = 55;
 
-    box_right_2.distance = 2655.0f;
-    box_right_2.chassis = -329.0f;
-    box_right_2.claw_angle = 85;
+    box_right_2.distance = 2755.0f;
+    box_right_2.chassis = -297.0f;
+    box_right_2.claw_angle = 100;
 }
 
 void Bean_Init(void){
@@ -67,9 +67,9 @@ void Bean_Init(void){
     bean[1].position = LEFT;
     bean[2].position = MIDDLE; 
 
-    bean[0].target_position = MIDDLE_0;
-    bean[1].target_position = RIGHT_2;
-    bean[2].target_position = LEFT_2;
+    bean[0].target_position = LEFT_1;
+    bean[1].target_position = RIGHT_1;
+    bean[2].target_position = RIGHT_2;
 } 
 void Bean_Target_Set(void){
     for(int i=0;i<3;i++){
@@ -96,7 +96,7 @@ static void Bean_Place_Switch(Bean *b, uint16_t next_normal, uint16_t next_speci
             Claw_degree_set(box_left_2.claw_angle,CLAW_UP);
             par.target_distance = box_left_2.distance;
             par.degree_chassis = box_left_2.chassis;
-            if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<5.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+            if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<8.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
                 par.degree_claw = -170.0f;
                 if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-230.0f){
                     Claw_degree_set(CLAW_HALF_OPEN,CLAW_DOWN);
@@ -115,7 +115,7 @@ static void Bean_Place_Switch(Bean *b, uint16_t next_normal, uint16_t next_speci
             Claw_degree_set(box_left_1.claw_angle,CLAW_UP);
             par.target_distance = box_left_1.distance;
             par.degree_chassis = box_left_1.chassis;
-            if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<5.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+            if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<8.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
                 par.degree_claw = -170.0f;
                 if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-230.0f){
                     Claw_degree_set(CLAW_HALF_OPEN,CLAW_DOWN);
@@ -131,7 +131,7 @@ static void Bean_Place_Switch(Bean *b, uint16_t next_normal, uint16_t next_speci
             par.target_distance = box_middle_0.distance;
             if(lidar.distance_aver>1800.0f){
                 par.degree_chassis = box_middle_0.chassis;
-                if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<5.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<8.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
                     par.degree_claw = -190.0f;
                     if(hDJI[3].AxisData.AxisAngle_inDegree>-230.0f){
                         Claw_degree_set(CLAW_HALF_OPEN,CLAW_DOWN);
@@ -148,7 +148,7 @@ static void Bean_Place_Switch(Bean *b, uint16_t next_normal, uint16_t next_speci
             par.target_distance = box_right_1.distance;
             if(lidar.distance_aver>1800.0f){
                 par.degree_chassis = box_right_1.chassis;
-                if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<5.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
+                if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<8.0f)&&(abs(lidar.distance_aver-par.target_distance)<5.0f)){
                     par.degree_claw = -170.0f;
                     if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-200.0f){
                         Claw_degree_set(CLAW_HALF_OPEN,CLAW_DOWN);
@@ -165,7 +165,6 @@ static void Bean_Place_Switch(Bean *b, uint16_t next_normal, uint16_t next_speci
             if(lidar.distance_aver<2000.0f){
                 par.target_distance = 2155.0f;
             }
-
             if(lidar.distance_aver>2000.0f){
                 par.degree_chassis = box_right_2.chassis;
                 if((abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<20.0f)){
@@ -210,9 +209,9 @@ void Upper_State_Task(void *arg){
         if(stage_flag == 10){//向下抓取
             osDelay(300);
             par.degree_claw = -250.0f;
-            if(hDJI[3].AxisData.AxisAngle_inDegree>-450.0f){
+            if(hDJI[3].AxisData.AxisAngle_inDegree>-400.0f){
                 Claw_degree_set(CLAW_CLOSE,CLAW_DOWN);
-                osDelay(1000);
+                osDelay(800);
                 Motor_State_Reset(&hDJI[2]);
                 Motor_State_Reset(&hDJI[0]);
                 stage_flag = 20;
@@ -220,7 +219,7 @@ void Upper_State_Task(void *arg){
         }
                 if(stage_flag == 20){//抬升并旋转
             par.degree_claw = -600.0f;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -550.0f){
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -580.0f){
                 // Motor_State_Reset(&hDJI[2]);
                 par.degree_chassis = -630.0f;
                 if(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<30.0f){
@@ -259,17 +258,17 @@ void Upper_State_Task(void *arg){
                 }
             }
         }
-        if(stage_flag == 50){//抓取
-            par.degree_claw = -100.0f;
-            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-125.0f){
+        if(stage_flag == 50){//向下抓取
+            par.degree_claw = -50.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-90.0f){
                 Claw_degree_set(CLAW_CLOSE,CLAW_DOWN);
-                osDelay(1000);
+                osDelay(800);
                 stage_flag = 60;
             }
         }
         if(stage_flag == 60){
             par.degree_claw = -600.0f;
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -500.0f){
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -550.0f){
                 par.degree_chassis = -630.0f;
                 if(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<30.0f){
                     stage_flag = 70;
@@ -299,7 +298,7 @@ void Upper_State_Task(void *arg){
             par.degree_claw = -600.0f;
             Claw_degree_set(CLAW_OPEN,CLAW_DOWN);
             Claw_degree_set(bean_right.claw_angle,CLAW_UP);
-            if(hDJI[3].AxisData.AxisAngle_inDegree < -400.0f){
+            if(hDJI[3].AxisData.AxisAngle_inDegree < -580.0f){
                 par.degree_chassis = bean_right.chassis;
                 par.target_distance = bean_right.distance;
                 if((abs(lidar.distance_aver-par.target_distance)<5.0f)&&(abs(hDJI[2].AxisData.AxisAngle_inDegree-par.degree_chassis)<2.0f)){
@@ -308,8 +307,8 @@ void Upper_State_Task(void *arg){
             }
         }
         if(stage_flag == 90){//向下抓取
-            par.degree_claw = -150.0f;
-            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-160.0f){
+            par.degree_claw = -100.0f;
+            if(hDJI[3].AxisData.AxisAngle_inDegree-par.degree_claw>-120.0f){
                 Claw_degree_set(CLAW_CLOSE,CLAW_DOWN);
                 osDelay(800);
                 stage_flag = 100;

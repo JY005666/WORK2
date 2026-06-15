@@ -26,13 +26,14 @@
  * - DIST_SERVO_MIN_MOVE_RPM：克服摩擦的最小爬行速度
  */
 /* 死区大小：机构有晃动时适当加大，避免电机跟着晃 */
-#define DIST_SERVO_POS_TOL_MM              10.0f
+#define DIST_SERVO_POS_TOL_MM              5.0f
 #define DIST_SERVO_RPM_TOL                 60.0f
 #define DIST_SERVO_TARGET_CHANGE_TOL_MM    0.5f
 #define DIST_SERVO_MAX_SPEED_RPM           8000.0f
 #define DIST_SERVO_KP_RPM_PER_MM           30.0f
-#define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  42000.0f
+#define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  25000.0f
 #define DIST_SERVO_MIN_MOVE_RPM            100.0f
+#define DIST_SERVO_APPROACH_SPEED_RPM      150.0f   // 距目标 50mm 内速度绝对值上限
 #define DIST_SERVO_ACCEL_RPM_PER_S         10000.0f
 #define DIST_SERVO_DECEL_RPM_PER_S         8000.0f
 #define DIST_SERVO_DEFAULT_DT_S            0.001f
@@ -40,12 +41,8 @@
 #define DIST_SERVO_SENSOR_MIN_MM           20.0f
 #define DIST_SERVO_SENSOR_MAX_MM           5000.0f
 /* 到达稳定确认时间（ms）：持续在死区内这么久才标记到达 */
-#define DIST_SERVO_STABLE_MS               10
+#define DIST_SERVO_STABLE_MS               200
 
-// 启动助力（Kick-Start）参数
-#define KICK_START_THRESHOLD_RPM    50.0f
-#define KICK_START_BOOST_RPM        800.0f
-#define KICK_START_MAX_DURATION_MS  500
 
 extern uint16_t distance_offset;
 

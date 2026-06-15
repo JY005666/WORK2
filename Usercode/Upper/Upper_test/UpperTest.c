@@ -6,7 +6,7 @@ void Upper_Test_Task(void *argument){
     for(;;){
         Yaw_servo(-547.0f, &hDJI[2]);
         // positionServo(-360.0f,&hDJI[3]);
-        Distance_servo(2350.0f,&hDJI[0]);
+        Distance_servo(500.0f,&hDJI[0]);
         // CanTransmit_DJI_1234(&hcan1, 0, 0, hDJI[2].speedPID.output, 0);
         CanTransmit_DJI_1234(&hcan1,hDJI[0].speedPID.output,-hDJI[0].speedPID.output,0,0);
         // CanTransmit_DJI_1234(&hcan1,0,0,0,hDJI[3].speedPID.output);
