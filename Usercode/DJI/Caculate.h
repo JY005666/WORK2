@@ -34,7 +34,7 @@
 #define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM  25000.0f
 #define DIST_SERVO_MIN_MOVE_RPM            100.0f
 #define DIST_SERVO_APPROACH_SPEED_RPM      150.0f   // 距目标 50mm 内速度绝对值上限
-#define DIST_SERVO_ACCEL_RPM_PER_S         10000.0f
+#define DIST_SERVO_ACCEL_RPM_PER_S         8000.0f
 #define DIST_SERVO_DECEL_RPM_PER_S         8000.0f
 #define DIST_SERVO_DEFAULT_DT_S            0.001f
 #define DIST_SERVO_MAX_DT_S                0.020f
