@@ -38,7 +38,7 @@ void Angle_Init(void){
     bean_right.claw_angle = 50;
 
     bean_middle.distance = 590.0f;
-    bean_middle.chassis = -5.0f;
+    bean_middle.chassis = -7.0f;
     bean_middle.claw_angle = 85;
 
     box_left_2.distance = 2743.0f;
