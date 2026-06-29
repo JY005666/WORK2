@@ -21,7 +21,7 @@ void StartDefaultTask(void *argument){
     STP23L_Init(&huart1); // 开启距离传感接收中断
     DistanceUpdate_Start(); // 开启距离传感更新任务
     
-    osDelay(2500);//等待4s，方便烧录
+    osDelay(3500);//等待4s，方便烧录
 
     DJI_Init();//初始化电机参数
 
