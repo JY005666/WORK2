@@ -14,6 +14,11 @@ static char s_host_line[HOST_RX_LINE_MAX];
 static uint8_t s_host_line_len = 0;
 static volatile uint8_t s_host_line_ready = 0;
 
+static uint8_t HostControl_IsValidAxis(uint8_t axis)
+{
+    return (axis == 0U || axis == 2U || axis == 3U);
+}
+
 static void HostControl_Send(const char *text)
 {
     if (s_host_uart == NULL || text == NULL) return;
@@ -22,15 +27,15 @@ static void HostControl_Send(const char *text)
 
 static void HostControl_SendStatus(void)
 {
-    char msg[160];
+    char msg[192];
     snprintf(msg, sizeof(msg),
-             "TARGET[0]=%.2f TARGET[2]=%.2f TARGET[3]=%.2f "
-             "ACT[0]=%.2f ACT[2]=%.2f ACT[3]=%.2f "
+             "DIST_TGT=%.2f YAW_TGT=%.2f ARM_TGT=%.2f "
+             "DIST_ACT=%.2f YAW_ACT=%.2f ARM_ACT=%.2f "
              "EN=%u%u%u STOP=%u\r\n",
              g_host_control.target_deg[0],
              g_host_control.target_deg[2],
              g_host_control.target_deg[3],
-             hDJI[0].AxisData.AxisAngle_inDegree,
+             lidar.distance_aver,
              hDJI[2].AxisData.AxisAngle_inDegree,
              hDJI[3].AxisData.AxisAngle_inDegree,
              g_host_control.enabled[0],
@@ -40,9 +45,23 @@ static void HostControl_SendStatus(void)
     HostControl_Send(msg);
 }
 
+static void HostControl_ZeroAxis(uint8_t axis)
+{
+    if (!HostControl_IsValidAxis(axis)) return;
+
+    if (axis == 0U) {
+        DistanceServo_Reset(&hDJI[0]);
+        g_host_control.target_deg[0] = lidar.distance_aver;
+        return;
+    }
+
+    Reset_DJI_Motor_Full(&hDJI[axis]);
+    g_host_control.target_deg[axis] = 0.0f;
+}
+
 static void HostControl_SetAxis(uint8_t axis, float degree)
 {
-    if (axis >= 4U) return;
+    if (!HostControl_IsValidAxis(axis)) return;
 
     g_host_control.target_deg[axis] = degree;
     g_host_control.enabled[axis] = 1U;
@@ -70,6 +89,7 @@ static void HostControl_HandleLine(char *line)
     long axis = 0;
     float deg = 0.0f;
     float d0 = 0.0f, d2 = 0.0f, d3 = 0.0f;
+    char arg1[8] = {0};
 
     while (*cursor == ' ' || *cursor == '\t') {
         cursor++;
@@ -96,7 +116,7 @@ static void HostControl_HandleLine(char *line)
             return;
         }
 
-        if (axis == 0 || axis == 2 || axis == 3) {
+        if (HostControl_IsValidAxis((uint8_t)axis)) {
             HostControl_SetAxis((uint8_t)axis, deg);
             HostControl_Send("OK\r\n");
         } else {
@@ -135,6 +155,58 @@ static void HostControl_HandleLine(char *line)
         return;
     }
 
+    if (strcmp(cmd, "ZERO") == 0) {
+        cursor += 4;
+        while (*cursor == ' ' || *cursor == '\t') cursor++;
+        if (sscanf(cursor, "%7s", arg1) != 1) {
+            HostControl_Send("ERR zero arg\r\n");
+            return;
+        }
+
+        if (strcmp(arg1, "ALL") == 0) {
+            HostControl_ZeroAxis(0);
+            HostControl_ZeroAxis(2);
+            HostControl_ZeroAxis(3);
+            HostControl_Send("OK\r\n");
+            return;
+        }
+
+        axis = strtol(arg1, &endptr, 10);
+        if (arg1 == endptr || !HostControl_IsValidAxis((uint8_t)axis)) {
+            HostControl_Send("ERR axis\r\n");
+            return;
+        }
+
+        HostControl_ZeroAxis((uint8_t)axis);
+        HostControl_Send("OK\r\n");
+        return;
+    }
+
+    if (strcmp(cmd, "STREAM") == 0) {
+        cursor += 6;
+        while (*cursor == ' ' || *cursor == '\t') cursor++;
+        if (sscanf(cursor, "%7s", arg1) != 1) {
+            HostControl_Send("ERR stream arg\r\n");
+            return;
+        }
+
+        if (strcmp(arg1, "ON") == 0) {
+            g_host_control.stream_enabled = 1U;
+            g_host_control.last_stream_tick = HAL_GetTick();
+            HostControl_Send("OK\r\n");
+            return;
+        }
+
+        if (strcmp(arg1, "OFF") == 0) {
+            g_host_control.stream_enabled = 0U;
+            HostControl_Send("OK\r\n");
+            return;
+        }
+
+        HostControl_Send("ERR stream arg\r\n");
+        return;
+    }
+
     if (strcmp(cmd, "STOP") == 0) {
         HostControl_StopAll();
         HostControl_Send("OK\r\n");
@@ -147,8 +219,11 @@ static void HostControl_HandleLine(char *line)
     }
 
     if (strcmp(cmd, "HELP") == 0) {
-        HostControl_Send("SET <0|2|3> <deg>\r\n");
-        HostControl_Send("ALL <deg0> <deg2> <deg3>\r\n");
+        HostControl_Send("SET 0 <distance_mm>\r\n");
+        HostControl_Send("SET <2|3> <deg>\r\n");
+        HostControl_Send("ALL <distance_mm> <deg2> <deg3>\r\n");
+        HostControl_Send("ZERO <0|2|3|ALL>\r\n");
+        HostControl_Send("STREAM <ON|OFF>\r\n");
         HostControl_Send("GET\r\nSTOP\r\n");
         return;
     }
@@ -164,6 +239,8 @@ void HostControl_Start(UART_HandleTypeDef *huart)
     memset(s_host_line, 0, sizeof(s_host_line));
     memset(&g_host_control, 0, sizeof(g_host_control));
     g_host_control.stop_all = 1U;
+    g_host_control.stream_period_ms = 100U;
+    g_host_control.last_stream_tick = HAL_GetTick();
 
     HAL_UART_Receive_IT(s_host_uart, &s_host_rx_byte, 1);
     HostControl_Send("HOST CTRL READY\r\n");
@@ -189,11 +266,19 @@ void HostControl_OnByteReceived(uint8_t byte)
 
 void HostControl_Process(void)
 {
-    if (!s_host_line_ready) return;
+    uint32_t now = HAL_GetTick();
 
-    s_host_line_ready = 0U;
-    HostControl_HandleLine(s_host_line);
-    memset(s_host_line, 0, sizeof(s_host_line));
+    if (s_host_line_ready) {
+        s_host_line_ready = 0U;
+        HostControl_HandleLine(s_host_line);
+        memset(s_host_line, 0, sizeof(s_host_line));
+    }
+
+    if (g_host_control.stream_enabled &&
+        (now - g_host_control.last_stream_tick >= g_host_control.stream_period_ms)) {
+        g_host_control.last_stream_tick = now;
+        HostControl_SendStatus();
+    }
 }
 
 uint8_t *HostControl_RxBuffer(void)

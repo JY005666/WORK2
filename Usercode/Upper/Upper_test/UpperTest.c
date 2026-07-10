@@ -18,12 +18,12 @@ void Upper_Test_Task(void *argument){
         }
 
         if (g_host_control.enabled[0]) {
-            positionServo(g_host_control.target_deg[0], &hDJI[0]);
+            Distance_servo(g_host_control.target_deg[0], &hDJI[0]);
             iq0 = (int16_t)hDJI[0].speedPID.output;
         }
 
         if (g_host_control.enabled[2]) {
-            positionServo(g_host_control.target_deg[2], &hDJI[2]);
+            Yaw_servo(g_host_control.target_deg[2], &hDJI[2]);
             iq2 = (int16_t)hDJI[2].speedPID.output;
         }
 

@@ -11,6 +11,9 @@ typedef struct
     float target_deg[4];
     uint8_t enabled[4];
     uint8_t stop_all;
+    uint8_t stream_enabled;
+    uint32_t stream_period_ms;
+    uint32_t last_stream_tick;
 } HostControlState_t;
 
 extern HostControlState_t g_host_control;
