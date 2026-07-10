@@ -31,7 +31,7 @@ void DJI_Init(){
 					hDJI[i].posPID.KP=40.0f;
 					hDJI[i].posPID.KI =0.0f;
 					hDJI[i].posPID.KD = 0.0f;        // 加微分阻尼抑制到位晃动
-					hDJI[i].posPID.outputMax = 8000;
+					hDJI[i].posPID.outputMax = 9500;
 					hDJI[i].posPID.outputMin = 30.0f;
 			}
 
