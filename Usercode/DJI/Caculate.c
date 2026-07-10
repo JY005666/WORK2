@@ -282,6 +282,8 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
         /* 测距无效时不继续追目标，速度给定按减速度回零，避免传感器异常导致机构乱跑 */
         desired_speed_ref = 0.0f;
         distance_planner.arrived = 0U;
+        distance_planner.arrived_confirmed = 0U;
+        distance_planner.arrived_tick = 0U;
     }
 
         desired_speed_ref = Abs_Limit_Float(desired_speed_ref, DIST_SERVO_MAX_SPEED_RPM);
@@ -472,15 +474,11 @@ static void Yaw_Plan_Update(float target_degree, float current_degree, uint32_t 
         yaw_planner.initialized = 1U;
     }
 
-    if (yaw_planner.arrived) return;
-
     float elapsed = ((float)now_tick - yaw_planner.start_time) * 0.001f;
     float planned_angle;
 
     if (elapsed >= yaw_planner.total_time) {
         planned_angle = yaw_planner.target_degree;
-        yaw_planner.arrived = 1U;
-        yaw_planner.arrived_confirmed = 1U;
     } else if (elapsed <= yaw_planner.accel_time) {
         planned_angle = yaw_planner.initial_angle +
                         yaw_planner.direction * 0.5f * YAW_ACCEL_DEG_PER_S2 * elapsed * elapsed;
@@ -503,6 +501,14 @@ static void Yaw_Plan_Update(float target_degree, float current_degree, uint32_t 
     }
 
     yaw_planner.last_planned_angle = planned_angle;
+
+    if (fabsf(target_degree - current_degree) <= YAW_POS_TOL_DEG) {
+        yaw_planner.arrived = 1U;
+        yaw_planner.arrived_confirmed = 1U;
+    } else {
+        yaw_planner.arrived = 0U;
+        yaw_planner.arrived_confirmed = 0U;
+    }
 }
 
 void Yaw_servo(float target_degree, DJI_t *motor)
