@@ -521,6 +521,17 @@ void Yaw_servo(float target_degree, DJI_t *motor)
     Yaw_Plan_Update(target_degree, current_degree, now_tick);
 
     positionServo(yaw_planner.last_planned_angle, motor);
+
+    if (!YawServo_IsArrived()) {
+        float target_error = target_degree - current_degree;
+        float abs_target_error = fabsf(target_error);
+        if (abs_target_error >= YAW_MIN_OUTPUT_START_DEG &&
+            abs_target_error <= YAW_MIN_OUTPUT_ACTIVE_DEG &&
+            fabsf(motor->speedPID.output) < YAW_MIN_OUTPUT_CURRENT) {
+            motor->speedPID.output =
+                (target_error >= 0.0f) ? YAW_MIN_OUTPUT_CURRENT : -YAW_MIN_OUTPUT_CURRENT;
+        }
+    }
 }
 
 
