@@ -3,7 +3,7 @@
 uint8_t pos[3] = {0,0,0};
 
 void StartDefaultTask(void *argument){
-    // while(1){osDelay(100);}
+    // while(1){osDelay(100);printf("111");}
     printf("Upper Start\r\n");
     Vision_Init(); // 初始化摄像头
     // while(1){
@@ -35,14 +35,14 @@ void StartDefaultTask(void *argument){
 
     //启动线程
     // Claw_test();
-    // Upper_Test_Start();
-    Upper_State_Start();
-    Upper_Servo_Start();
+    Upper_Test_Start();
+    // Upper_State_Start();
+    // Upper_Servo_Start();
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){
         // printf("pos:%d,%d,%d\r\n",pos[0],pos[1],pos[2]);
-        printf("distance:%f,%f,%f,%f,%f\r\n",lidar.distance_aver,hDJI[0].FdbData.rpm,hDJI[1].FdbData.rpm,hDJI[2].AxisData.AxisAngle_inDegree,hDJI[3].AxisData.AxisAngle_inDegree);
+        printf("distance:%f,%f,%f,%f,%f\r\n",lidar.distance_aver,hDJI[0].AxisData.AxisAngle_inDegree,hDJI[1].AxisData.AxisAngle_inDegree,hDJI[2].AxisData.AxisAngle_inDegree,hDJI[3].AxisData.AxisAngle_inDegree);
         osDelay(50);
     }
 }
