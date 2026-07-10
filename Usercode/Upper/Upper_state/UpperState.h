@@ -50,6 +50,17 @@ typedef struct{
 
 extern Bean bean[3];
 extern Box box[5];
+extern uint16_t stage_flag;
+extern Angle bean_left;
+extern Angle bean_right;
+extern Angle bean_middle;
+extern Angle box_left_2;
+extern Angle box_left_1;
+extern Angle box_middle_0;
+extern Angle box_right_1;
+extern Angle box_right_2;
+extern float box_middle_0_chassis_cw;
+extern float box_middle_0_chassis_ccw;
 
 void Angle_Init(void);
 void Bean_Init(void);
