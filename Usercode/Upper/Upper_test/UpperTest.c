@@ -3,13 +3,36 @@
 
 void Upper_Test_Task(void *argument){
     osDelay(100);
+    HostControl_Start(&huart4);
     for(;;){
-        Yaw_servo(300.0f, &hDJI[2]);
-        // positionServo(-360.0f,&hDJI[3]);
-        // Distance_servo(1200.0f,&hDJI[0]);
-        CanTransmit_DJI_1234(&hcan1, 0, 0, hDJI[2].speedPID.output, 0);
-        // CanTransmit_DJI_1234(&hcan1,hDJI[0].speedPID.output,-hDJI[0].speedPID.output,0,0);
-        // CanTransmit_DJI_1234(&hcan1,0,0,0,hDJI[3].speedPID.output);
+        int16_t iq0 = 0;
+        int16_t iq2 = 0;
+        int16_t iq3 = 0;
+
+        HostControl_Process();
+
+        if (g_host_control.stop_all) {
+            CanTransmit_DJI_1234(&hcan1, 0, 0, 0, 0);
+            osDelay(1);
+            continue;
+        }
+
+        if (g_host_control.enabled[0]) {
+            positionServo(g_host_control.target_deg[0], &hDJI[0]);
+            iq0 = (int16_t)hDJI[0].speedPID.output;
+        }
+
+        if (g_host_control.enabled[2]) {
+            positionServo(g_host_control.target_deg[2], &hDJI[2]);
+            iq2 = (int16_t)hDJI[2].speedPID.output;
+        }
+
+        if (g_host_control.enabled[3]) {
+            positionServo(g_host_control.target_deg[3], &hDJI[3]);
+            iq3 = (int16_t)hDJI[3].speedPID.output;
+        }
+
+        CanTransmit_DJI_1234(&hcan1, iq0, -iq0, iq2, iq3);
         osDelay(1);
     }
 }

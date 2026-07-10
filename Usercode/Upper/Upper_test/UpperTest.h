@@ -3,6 +3,7 @@
 
 
 #include "UpperStart.h"
+#include "HostControl.h"
 
 void Upper_Test_Start(void);
 

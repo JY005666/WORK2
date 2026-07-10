@@ -1,4 +1,5 @@
 ﻿#include"Stp23L.h"
+#include "HostControl.h"
 #include <string.h>
 
 
@@ -147,6 +148,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
                 break;
         }
         HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
+    }
+    if (huart->Instance == UART4) {
+        HostControl_OnByteReceived(*HostControl_RxBuffer());
     }
 }
 void STP_23L_Decode(uint8_t *buffer, LidarPointTypedef*lidardata) // num:指明是第几个雷达，本代码框架中范围为0-3
