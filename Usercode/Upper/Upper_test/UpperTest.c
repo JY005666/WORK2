@@ -4,7 +4,7 @@
 void Upper_Test_Task(void *argument){
     osDelay(100);
     for(;;){
-        Yaw_servo(320.0f, &hDJI[2]);
+        Yaw_servo(-100.0f, &hDJI[2]);
         // positionServo(-360.0f,&hDJI[3]);
         // Distance_servo(1200.0f,&hDJI[0]);
         CanTransmit_DJI_1234(&hcan1, 0, 0, hDJI[2].speedPID.output, 0);
