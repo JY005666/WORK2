@@ -15,9 +15,12 @@
  * 2. FIRST_BEAN_LEFT_SAFE_CCW_DEG：左半边箱子时，先逆时针躲障的过渡角
  * 3. FIRST_BEAN_RIGHT_SAFE_CW_DEG：非左半边箱子时，先顺时针躲障的过渡角
  */
-#define SAFE_DIST_FOR_BOX_FINAL_TURN_MM  1455.0f
+#define SAFE_DIST_FOR_BOX_FINAL_TURN_MM  1500.0f
 #define FIRST_BEAN_LEFT_SAFE_CCW_DEG     (-80.0f)
 #define FIRST_BEAN_RIGHT_SAFE_CW_DEG     (60.0f)
+#define SECOND_BEAN_FINAL_TURN_MM        1500.0f
+#define SECOND_BEAN_LEFT_TO_RIGHT_AVOID_CCW_DEG   (60.0f)
+#define SECOND_BEAN_RIGHT_TO_LEFT_AVOID_CW_DEG    (-60.0f)
 
 void SetApproachTarget(const Angle *target);
 void PrepareBeanPickup(const Angle *target, float claw_hold_degree, float arm_ready_threshold);
@@ -25,10 +28,10 @@ uint8_t IsDistanceAndChassisReady(float distance_tol, float chassis_tol);
 void ResetDistanceAndChassisMotors(void);
 void CloseClawAndAdvance(uint16_t next_stage);
 void LiftAndRotateToPlacement(float lift_target, float lift_ready_threshold, float chassis_target, float chassis_tol, uint16_t next_stage);
-void HandleStage31Or40(uint16_t next_stage, float arm_ready_threshold, uint8_t require_distance_gate);
-void HandleStage71Or80(uint16_t next_stage, float arm_ready_threshold, uint8_t require_distance_gate);
 void HandleStage30_FirstBeanPlacement(void);
 void HandleStage31_SecondBeanPickup(void);
-void Bean_Place_Switch(Bean *b, uint16_t next_normal, uint16_t next_special);
+void HandleActiveBeanDelivery(uint16_t next_stage_left, uint16_t next_stage_right);
+void HandleStage900_ThirdBeanPickup(void);
+void Bean_Place_Switch(Bean *b, uint16_t next_stage);
 
 #endif

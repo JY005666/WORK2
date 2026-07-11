@@ -23,6 +23,11 @@ Angle box_right_1;
 Angle box_right_2;
 float box_middle_0_chassis_cw;
 float box_middle_0_chassis_ccw;
+ActiveBeanState g_active_bean_state = ACTIVE_NONE;
+BoxPosition g_last_placed_box_position = MIDDLE_0;
+BeanPosition g_third_bean_position = MIDDLE;
+uint8_t g_delivery_distance_enabled = 0U;
+uint8_t g_delivery_final_turn_enabled = 0U;
 
 static void HandleStage0(void)
 {
@@ -37,6 +42,7 @@ static void HandleStage0(void)
         Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
         par.degree_chassis = bean_middle.chassis;
         if (IsDistanceAndChassisReady(5.0f, 0.5f)) {
+            osDelay(300);
             stage_flag = 10;
         }
     }
@@ -44,7 +50,7 @@ static void HandleStage0(void)
 
 static void HandleStage10(void)
 {
-    osDelay(300);
+
     par.degree_claw = -250.0f;
     if (hDJI[3].AxisData.AxisAngle_inDegree > -400.0f) {
         Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
@@ -57,63 +63,68 @@ static void HandleStage10(void)
 static void HandleStage20(void)
 {
     par.degree_claw = -650.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree < -580.0f) {
+    if (hDJI[3].AxisData.AxisAngle_inDegree < -600.0f) {
         stage_flag = 30;
     }
 }
 
 static void HandleStage50(void)
 {
-    par.degree_claw = -50.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -90.0f) {
-        CloseClawAndAdvance(60);
+    if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
+        par.degree_claw = -50.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -90.0f) {
+            g_delivery_distance_enabled = 0U;
+            g_delivery_final_turn_enabled = 0U;
+            CloseClawAndAdvance(60);
+        }
+        return;
     }
-}
 
-static void HandleStage60(void)
-{
-    LiftAndRotateToPlacement(-650.0f, -550.0f, -630.0f, 30.0f, 70);
-}
-
-static void HandleStage90(void)
-{
-    par.degree_claw = -100.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -120.0f) {
-        CloseClawAndAdvance(100);
-    }
-}
-
-static void HandleStage100(void)
-{
-    par.degree_claw = -650.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree < -500.0f) {
-        par.degree_chassis = -1250.0f;
-        par.target_distance = 1600.0f;
-        if ((hDJI[2].AxisData.AxisAngle_inDegree < -1200.0f) && (lidar.distance_aver > 1000.0f)) {
-            stage_flag = 101;
-            Motor_State_Reset(&hDJI[2]);
+    if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
+        par.degree_claw = -100.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -120.0f) {
+            g_delivery_distance_enabled = 0U;
+            g_delivery_final_turn_enabled = 0U;
+            CloseClawAndAdvance(60);
         }
     }
 }
 
-static void HandleStage101(void)
+static void HandleStage910(void)
 {
-    par.target_distance = 1600.0f;
-    par.degree_chassis = -800.0f;
-    if ((lidar.distance_aver > 700.0f) && (hDJI[2].AxisData.AxisAngle_inDegree < -850.0f)) {
-        ResetDistanceAndChassisMotors();
-        stage_flag = 110;
+    if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
+        par.degree_claw = -50.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -90.0f) {
+            g_delivery_distance_enabled = 0U;
+            g_delivery_final_turn_enabled = 0U;
+            CloseClawAndAdvance(920);
+        }
+        return;
     }
+
+    if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
+        par.degree_claw = -100.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -120.0f) {
+            g_delivery_distance_enabled = 0U;
+            g_delivery_final_turn_enabled = 0U;
+            CloseClawAndAdvance(920);
+        }
+    }
+}
+
+static void HandleStage920(void)
+{
+    HandleActiveBeanDelivery(930, 940);
 }
 
 void Angle_Init(void)
 {
-    bean_left.distance = 165.0f;
-    bean_left.chassis = -105.0f;
+    bean_left.distance = 300.0f;
+    bean_left.chassis = -110.0f;
     bean_left.claw_angle = 120;
 
-    bean_right.distance = 189.0f;
-    bean_right.chassis = -983.0f;
+    bean_right.distance = 300.0f;
+    bean_right.chassis = 85.0f;
     bean_right.claw_angle = 50;
 
     bean_middle.distance = 656.0f;
@@ -149,8 +160,8 @@ void Bean_Init(void)
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
 
-    bean[0].target_position = LEFT_1;
-    bean[1].target_position = RIGHT_1;
+    bean[0].target_position = RIGHT_1;
+    bean[1].target_position = LEFT_1;
     bean[2].target_position = MIDDLE_0;
 }
 
@@ -179,49 +190,46 @@ void Upper_State_Task(void *arg)
     for (;;) {
         switch (stage_flag) {
             case 0:
-                HandleStage0();
+                HandleStage0(); //到达第一个抓取位置
                 break;
             case 10:
-                HandleStage10();
+                HandleStage10(); //抓取第一个豆子
                 break;
             case 20:
-                HandleStage20();
+                HandleStage20(); //上升爪子到打不到箱子
                 break;
             case 30:
-                HandleStage30_FirstBeanPlacement();
+                HandleStage30_FirstBeanPlacement(); //放置第一个豆子
                 break;
             case 31:
-                HandleStage31_SecondBeanPickup();
-                break;
-            case 40:
-                HandleStage31Or40(50, -400.0f, 0U);
+                HandleStage31_SecondBeanPickup(); //到达第二个豆子抓取位置
                 break;
             case 50:
-                HandleStage50();
+                HandleStage50(); //抓取第二个豆子
                 break;
             case 60:
-                HandleStage60();
+                HandleActiveBeanDelivery(70, 110); //第二个豆子的送箱与障碍规避
                 break;
             case 70:
-                Bean_Place_Switch(&bean[1], 80, 71);
-                break;
-            case 71:
-                HandleStage71Or80(80, -300.0f, 1U);
-                break;
-            case 80:
-                HandleStage71Or80(90, -580.0f, 0U);
-                break;
-            case 90:
-                HandleStage90();
-                break;
-            case 100:
-                HandleStage100();
-                break;
-            case 101:
-                HandleStage101();
+                Bean_Place_Switch(&bean[1], 900); //左豆子
                 break;
             case 110:
-                Bean_Place_Switch(&bean[0], 800, 710);
+                Bean_Place_Switch(&bean[0], 900); //右豆子
+                break;
+            case 900:
+                HandleStage900_ThirdBeanPickup();
+                break;
+            case 910:
+                HandleStage910();
+                break;
+            case 920:
+                HandleStage920();
+                break;
+            case 930:
+                Bean_Place_Switch(&bean[1], 1000);
+                break;
+            case 940:
+                Bean_Place_Switch(&bean[0], 1000);
                 break;
             default:
                 break;

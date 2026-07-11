@@ -16,6 +16,13 @@ typedef enum{
 } BeanPosition;
 
 typedef enum{
+    ACTIVE_NONE = 0,
+    ACTIVE_BEAN_LEFT,
+    ACTIVE_BEAN_RIGHT,
+    ACTIVE_BEAN_MIDDLE
+} ActiveBeanState;
+
+typedef enum{
     LEFT_2 = 0,
     LEFT_1,
     MIDDLE_0,
@@ -61,6 +68,11 @@ extern Angle box_right_1;
 extern Angle box_right_2;
 extern float box_middle_0_chassis_cw;
 extern float box_middle_0_chassis_ccw;
+extern ActiveBeanState g_active_bean_state;
+extern BoxPosition g_last_placed_box_position;
+extern BeanPosition g_third_bean_position;
+extern uint8_t g_delivery_distance_enabled;
+extern uint8_t g_delivery_final_turn_enabled;
 
 void Angle_Init(void);
 void Bean_Init(void);

@@ -19,6 +19,61 @@ static Angle *GetBoxAngleByPosition(BoxPosition position)
     }
 }
 
+static Bean *GetActiveBean(void)
+{
+    if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
+        return &bean[1];
+    }
+    if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
+        return &bean[0];
+    }
+    if (g_active_bean_state == ACTIVE_BEAN_MIDDLE) {
+        return &bean[2];
+    }
+    return NULL;
+}
+
+static uint8_t IsRightSideBox(BoxPosition position)
+{
+    return (uint8_t)((position == RIGHT_1) || (position == RIGHT_2));
+}
+
+static void FinishBeanPlacement(Bean *b, uint16_t next_stage)
+{
+    if (b != NULL) {
+        g_last_placed_box_position = b->target_position;
+    }
+
+    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+    osDelay(500);
+    stage_flag = next_stage;
+}
+
+static void TryPlaceBean(Bean *b,
+                         const Angle *target_box,
+                         float arm_target,
+                         float arm_ready_margin,
+                         float chassis_tol,
+                         float distance_tol,
+                         uint16_t next_stage)
+{
+    if (b == NULL || target_box == NULL) {
+        return;
+    }
+
+    Claw_degree_set(target_box->claw_angle, CLAW_UP);
+    par.target_distance = target_box->distance;
+    par.degree_chassis = target_box->chassis;
+
+    if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < chassis_tol) &&
+        (abs(lidar.distance_aver - par.target_distance) < distance_tol)) {
+        par.degree_claw = arm_target;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > arm_ready_margin) {
+            FinishBeanPlacement(b, next_stage);
+        }
+    }
+}
+
 static float GetFinalChassisForStage30(const Angle *target_box, BoxPosition position, uint8_t approached_from_left_side)
 {
     if (target_box == NULL) {
@@ -30,6 +85,23 @@ static float GetFinalChassisForStage30(const Angle *target_box, BoxPosition posi
     }
 
     if (approached_from_left_side) {
+        return box_middle_0_chassis_cw;
+    }
+
+    return box_middle_0_chassis_ccw;
+}
+
+static float GetFinalChassisForActiveBeanDelivery(const Angle *target_box, Bean *active_bean)
+{
+    if (target_box == NULL || active_bean == NULL) {
+        return 0.0f;
+    }
+
+    if (active_bean->target_position != MIDDLE_0) {
+        return target_box->chassis;
+    }
+
+    if (active_bean->position == LEFT) {
         return box_middle_0_chassis_cw;
     }
 
@@ -83,39 +155,167 @@ void LiftAndRotateToPlacement(float lift_target, float lift_ready_threshold, flo
     }
 }
 
-void HandleStage31Or40(uint16_t next_stage, float arm_ready_threshold, uint8_t require_distance_gate)
+/*
+ * 第二颗豆的统一接近状态：
+ * 放完第一个豆子后，夹爪上升，然后根据第一个豆子的目标箱子在左半边还是非左半边，
+ * 直接给左豆或右豆对应的底盘距离和云台角度。
+ * 当距离和云台都到位后，进入抓取状态。
+ */
+void HandleStage31_SecondBeanPickup(void)
 {
-    PrepareBeanPickup(&bean_left, -650.0f, arm_ready_threshold);
-    if (require_distance_gate && lidar.distance_aver >= 2000.0f) {
-        return;
-    }
-    if (IsDistanceAndChassisReady(5.0f, 2.0f)) {
-        stage_flag = next_stage;
-    }
-}
+    const Angle *next_target = NULL;
+    uint16_t next_stage = 0;
 
-void HandleStage71Or80(uint16_t next_stage, float arm_ready_threshold, uint8_t require_distance_gate)
-{
-    PrepareBeanPickup(&bean_right, -650.0f, arm_ready_threshold);
-    if (require_distance_gate && lidar.distance_aver >= 2000.0f) {
+    par.degree_claw = -650.0f;
+
+    /*
+     * 豆子和箱子的左右是相对关系：
+     * - 如果第一个豆子的目标箱子在左半边，下一步去抓右豆
+     * - 如果第一个豆子的目标箱子在非左半边，下一步去抓左豆
+     */
+    if (IsLeftSideBox(bean[2].target_position)) {
+        next_target = &bean_right;
+        g_active_bean_state = ACTIVE_BEAN_RIGHT;
+        g_third_bean_position = LEFT;
+    } else {
+        next_target = &bean_left;
+        g_active_bean_state = ACTIVE_BEAN_LEFT;
+        g_third_bean_position = RIGHT;
+    }
+    next_stage = 50;
+
+    if (next_target == NULL) {
         return;
     }
+
+    Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
+    Claw_degree_set(next_target->claw_angle, CLAW_UP);
+    SetApproachTarget(next_target);
+
     if (IsDistanceAndChassisReady(5.0f, 2.0f)) {
         stage_flag = next_stage;
     }
 }
 
 /*
- * 第二颗豆的统一接近状态：
- * 不再区分“先进入左豆入口状态”还是“先进入右豆入口状态”，
- * 而是在这里直接根据第一个豆子的目标箱子位置，决定下一步去抓左豆还是右豆。
+ * 第二个豆子抓取完成后的送箱逻辑：
+ * 1. 左豆：
+ *    - 目标箱子在非右边：先走目标距离，距离过线后再给最终云台角
+ *    - 目标箱子在右边：先给逆时针避障角，等云台角度大于 0 后再走目标距离，
+ *      距离过线后再给最终云台角
+ * 2. 右豆：
+ *    - 目标箱子在非左边：先走目标距离，距离过线后再给最终云台角
+ *    - 目标箱子在左边：先给顺时针避障角，等云台角度小于 0 后再走目标距离，
+ *      距离过线后再给最终云台角
  */
-void HandleStage31_SecondBeanPickup(void)
+void HandleActiveBeanDelivery(uint16_t next_stage_left, uint16_t next_stage_right)
 {
-    if (IsLeftSideBox(bean[2].target_position)) {
-        HandleStage31Or40(50, -450.0f, 1U);
+    Bean *active_bean = GetActiveBean();
+    Angle *target_box = NULL;
+    uint16_t next_stage = 0;
+    uint8_t need_avoid = 0U;
+    uint8_t used_ccw_avoid = 0U;
+    float avoid_chassis_target = 0.0f;
+
+    par.degree_claw = -650.0f;
+
+    if (active_bean == NULL) {
+        return;
+    }
+
+    target_box = GetBoxAngleByPosition(active_bean->target_position);
+    if (target_box == NULL) {
+        return;
+    }
+
+    Claw_degree_set(target_box->claw_angle, CLAW_UP);
+
+    if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
+        next_stage = next_stage_left;
+        if (IsRightSideBox(active_bean->target_position)) {
+            need_avoid = 1U;
+            used_ccw_avoid = 1U;
+            avoid_chassis_target = SECOND_BEAN_LEFT_TO_RIGHT_AVOID_CCW_DEG;
+        }
+    } else if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
+        next_stage = next_stage_right;
+        if (IsLeftSideBox(active_bean->target_position)) {
+            need_avoid = 1U;
+            avoid_chassis_target = SECOND_BEAN_RIGHT_TO_LEFT_AVOID_CW_DEG;
+        }
     } else {
-        HandleStage71Or80(90, -580.0f, 0U);
+        return;
+    }
+
+    if (!g_delivery_distance_enabled) {
+        if (need_avoid) {
+            par.degree_chassis = avoid_chassis_target;
+            if ((used_ccw_avoid && (hDJI[2].AxisData.AxisAngle_inDegree > 0.0f)) ||
+                (!used_ccw_avoid && (hDJI[2].AxisData.AxisAngle_inDegree < 0.0f))) {
+                g_delivery_distance_enabled = 1U;
+            }
+        } else {
+            g_delivery_distance_enabled = 1U;
+        }
+    }
+
+    if (g_delivery_distance_enabled) {
+        par.target_distance = target_box->distance;
+        if (!g_delivery_final_turn_enabled && (lidar.distance_aver > SECOND_BEAN_FINAL_TURN_MM)) {
+            g_delivery_final_turn_enabled = 1U;
+        }
+    }
+
+    if (g_delivery_final_turn_enabled) {
+        par.degree_chassis = GetFinalChassisForActiveBeanDelivery(target_box, active_bean);
+    } else if (need_avoid) {
+        par.degree_chassis = avoid_chassis_target;
+    }
+
+    if (IsDistanceAndChassisReady(5.0f, 8.0f)) {
+        stage_flag = next_stage;
+    }
+}
+
+
+/*
+ * 第三颗豆抓取的可试版逻辑：
+ * 直接取“剩下的最后一颗豆”，把它的底盘距离和云台角度目标赋给程序。
+ * 当前版本先不加复杂避障，只验证第三颗豆能否被正确接近并抓取。
+ */
+void HandleStage900_ThirdBeanPickup(void)
+{
+    const Angle *last_target = NULL;
+
+    par.degree_claw = -650.0f;
+
+    /*
+     * 第三颗豆子在第二颗豆子的抓取路线确定时就已经记录下来，
+     * 这里直接按记录值取目标，避免 g_active_bean_state 被后续状态覆盖后反推失败。
+     */
+    if (g_third_bean_position == LEFT) {
+        last_target = &bean_left;
+        g_active_bean_state = ACTIVE_BEAN_LEFT;
+    } else if (g_third_bean_position == RIGHT) {
+        last_target = &bean_right;
+        g_active_bean_state = ACTIVE_BEAN_RIGHT;
+    } else if (g_third_bean_position == MIDDLE) {
+        last_target = &bean_middle;
+        g_active_bean_state = ACTIVE_BEAN_MIDDLE;
+    } else {
+        return;
+    }
+
+    if (last_target == NULL) {
+        return;
+    }
+
+    Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
+    Claw_degree_set(last_target->claw_angle, CLAW_UP);
+    SetApproachTarget(last_target);
+
+    if (IsDistanceAndChassisReady(5.0f, 2.0f)) {
+        stage_flag = 910;
     }
 }
 
@@ -161,8 +361,6 @@ void HandleStage30_FirstBeanPlacement(void)
         if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -230.0f) {
             Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
             osDelay(500);
-            Motor_State_Reset(&hDJI[0]);
-            Motor_State_Reset(&hDJI[2]);
             /*
              * 第一个豆子放完后的下一目标，不再看它原本是“中间豆”，
              * 而是看它被放到了左半边还是非左半边：
@@ -174,106 +372,27 @@ void HandleStage30_FirstBeanPlacement(void)
     }
 }
 
-void Bean_Place_Switch(Bean *b, uint16_t next_normal, uint16_t next_special)
+void Bean_Place_Switch(Bean *b, uint16_t next_stage)
 {
+    if (b == NULL) {
+        return;
+    }
+
     switch (b->target_position) {
         case LEFT_2: {
-            Claw_degree_set(box_left_2.claw_angle, CLAW_UP);
-            par.target_distance = box_left_2.distance;
-            par.degree_chassis = box_left_2.chassis;
-            if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-                (abs(lidar.distance_aver - par.target_distance) < 5.0f)) {
-                par.degree_claw = -170.0f;
-                if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -230.0f) {
-                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(500);
-                    Motor_State_Reset(&hDJI[0]);
-                    Motor_State_Reset(&hDJI[2]);
-                    if (b->position == MIDDLE) {
-                        stage_flag = next_special;
-                    } else {
-                        stage_flag = next_normal;
-                    }
-                }
-            }
+            TryPlaceBean(b, &box_left_2, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
         } break;
         case LEFT_1: {
-            Claw_degree_set(box_left_1.claw_angle, CLAW_UP);
-            par.target_distance = box_left_1.distance;
-            par.degree_chassis = box_left_1.chassis;
-            if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-                (abs(lidar.distance_aver - par.target_distance) < 5.0f)) {
-                par.degree_claw = -170.0f;
-                if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -230.0f) {
-                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(500);
-                    Motor_State_Reset(&hDJI[0]);
-                    Motor_State_Reset(&hDJI[2]);
-                    stage_flag = next_normal;
-                }
-            }
+            TryPlaceBean(b, &box_left_1, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
         } break;
         case MIDDLE_0: {
-            Claw_degree_set(box_middle_0.claw_angle, CLAW_UP);
-            par.target_distance = box_middle_0.distance;
-            if (lidar.distance_aver > 1800.0f) {
-                par.degree_chassis = box_middle_0.chassis;
-                if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-                    (abs(lidar.distance_aver - par.target_distance) < 5.0f)) {
-                    par.degree_claw = -190.0f;
-                    if (hDJI[3].AxisData.AxisAngle_inDegree > -230.0f) {
-                        Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                        osDelay(500);
-                        Motor_State_Reset(&hDJI[0]);
-                        Motor_State_Reset(&hDJI[2]);
-                        stage_flag = next_normal;
-                    }
-                }
-            }
+            TryPlaceBean(b, &box_middle_0, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
         } break;
         case RIGHT_1: {
-            Claw_degree_set(box_right_1.claw_angle, CLAW_UP);
-            par.target_distance = box_right_1.distance;
-            if (lidar.distance_aver > 1800.0f) {
-                par.degree_chassis = box_right_1.chassis;
-                if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-                    (abs(lidar.distance_aver - par.target_distance) < 5.0f)) {
-                    par.degree_claw = -170.0f;
-                    if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -200.0f) {
-                        Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                        osDelay(500);
-                        Motor_State_Reset(&hDJI[0]);
-                        Motor_State_Reset(&hDJI[2]);
-                        stage_flag = next_normal;
-                    }
-                }
-            }
+            TryPlaceBean(b, &box_right_1, -170.0f, -200.0f, 8.0f, 5.0f, next_stage);
         } break;
         case RIGHT_2: {
-            Claw_degree_set(box_right_2.claw_angle, CLAW_UP);
-            if (lidar.distance_aver < 2000.0f) {
-                par.target_distance = 2155.0f;
-            }
-            if (lidar.distance_aver > 2000.0f) {
-                par.degree_chassis = box_right_2.chassis;
-                if (abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 20.0f) {
-                    par.target_distance = box_right_2.distance;
-                    if (abs(lidar.distance_aver - par.target_distance) < 5.0f) {
-                        par.degree_claw = -190.0f;
-                        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -230.0f) {
-                            Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                            osDelay(500);
-                            Motor_State_Reset(&hDJI[0]);
-                            Motor_State_Reset(&hDJI[2]);
-                            if (b->position == LEFT) {
-                                stage_flag = next_special;
-                            } else {
-                                stage_flag = next_normal;
-                            }
-                        }
-                    }
-                }
-            }
+            TryPlaceBean(b, &box_right_2, -190.0f, -230.0f, 8.0f, 5.0f, next_stage);
         } break;
     }
 }

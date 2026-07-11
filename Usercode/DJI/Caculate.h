@@ -32,8 +32,8 @@ extern uint16_t distance_offset;
 #define YAW_MAX_SPEED_DEG_PER_S       620.0f
 #define YAW_ACCEL_DEG_PER_S2          950.0f
 #define YAW_POS_TOL_DEG               1.0f
-#define YAW_MIN_OUTPUT_START_DEG      2.0f
-#define YAW_MIN_OUTPUT_ACTIVE_DEG     30.0f
+#define YAW_MIN_OUTPUT_START_DEG      1.0f
+#define YAW_MIN_OUTPUT_ACTIVE_DEG     100.0f
 #define YAW_MIN_OUTPUT_CURRENT        400.0f
 
 void YawServo_Reset(void);
