@@ -517,19 +517,56 @@ void Yaw_servo(float target_degree, DJI_t *motor)
 
     uint32_t now_tick = HAL_GetTick();
     float current_degree = motor->AxisData.AxisAngle_inDegree;
+    float servo_ref;
+    float planned_error;
+    float abs_planned_error;
+    float target_error;
+    float abs_target_error;
+    uint8_t crossed_target = 0U;
 
     Yaw_Plan_Update(target_degree, current_degree, now_tick);
 
-    positionServo(yaw_planner.last_planned_angle, motor);
+    servo_ref = yaw_planner.last_planned_angle;
+    target_error = target_degree - current_degree;
+    abs_target_error = fabsf(target_error);
+
+    if (yaw_planner.direction > 0.0f) {
+        crossed_target = (uint8_t)(current_degree >= target_degree);
+    } else {
+        crossed_target = (uint8_t)(current_degree <= target_degree);
+    }
+
+    /*
+     * 小齿轮带大齿轮时，终点附近若实际位置跑到规划参考前面，
+     * 很容易因为反向修正再次吃背隙，表现成“顿一下再动”。
+     * 这里在终点窗口内禁止反向拉回，保持单方向逼近。
+     */
+    if (abs_target_error <= YAW_ONE_WAY_APPROACH_DEG) {
+        if ((yaw_planner.direction > 0.0f) && (servo_ref < current_degree)) {
+            servo_ref = current_degree;
+        } else if ((yaw_planner.direction < 0.0f) && (servo_ref > current_degree)) {
+            servo_ref = current_degree;
+        }
+
+        if (crossed_target && (abs_target_error <= YAW_ONE_WAY_OVERSHOOT_DEG)) {
+            servo_ref = current_degree;
+            yaw_planner.arrived = 1U;
+            yaw_planner.arrived_confirmed = 1U;
+        }
+    }
+
+    positionServo(servo_ref, motor);
+
+    planned_error = servo_ref - current_degree;
+    abs_planned_error = fabsf(planned_error);
 
     if (!YawServo_IsArrived()) {
-        float target_error = target_degree - current_degree;
-        float abs_target_error = fabsf(target_error);
-        if (abs_target_error >= YAW_MIN_OUTPUT_START_DEG &&
-            abs_target_error <= YAW_MIN_OUTPUT_ACTIVE_DEG &&
+        if (abs_planned_error >= YAW_MIN_OUTPUT_START_DEG &&
+            abs_planned_error <= YAW_MIN_OUTPUT_ACTIVE_DEG &&
+            fabsf(motor->FdbData.rpm) <= YAW_MIN_OUTPUT_SPEED_RPM &&
             fabsf(motor->speedPID.output) < YAW_MIN_OUTPUT_CURRENT) {
             motor->speedPID.output =
-                (target_error >= 0.0f) ? YAW_MIN_OUTPUT_CURRENT : -YAW_MIN_OUTPUT_CURRENT;
+                (planned_error >= 0.0f) ? YAW_MIN_OUTPUT_CURRENT : -YAW_MIN_OUTPUT_CURRENT;
         }
     }
 }

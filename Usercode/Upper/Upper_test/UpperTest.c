@@ -1,7 +1,61 @@
-﻿#include "UpperTest.h"
+#include "UpperTest.h"
 #include "Caculate.h"
 
-void Upper_Test_Task(void *argument){
+typedef enum
+{
+    YAW_TEST_TO_POS_180 = 0,
+    YAW_TEST_WAIT_POS_180,
+    YAW_TEST_TO_ZERO,
+    YAW_TEST_WAIT_ZERO
+} YawTestState_t;
+
+void Yaw_Test_180_Loop(void)
+{
+    static YawTestState_t yaw_test_state = YAW_TEST_TO_POS_180;
+    static uint32_t wait_start_tick = 0U;
+
+    switch (yaw_test_state) {
+        case YAW_TEST_TO_POS_180:
+            Yaw_servo(180.0f, &hDJI[2]);
+            if (YawServo_IsArrived()) {
+                wait_start_tick = HAL_GetTick();
+                yaw_test_state = YAW_TEST_WAIT_POS_180;
+            }
+            break;
+
+        case YAW_TEST_WAIT_POS_180:
+            Yaw_servo(180.0f, &hDJI[2]);
+            if ((HAL_GetTick() - wait_start_tick) >= 2000U) {
+                YawServo_Reset();
+                yaw_test_state = YAW_TEST_TO_ZERO;
+            }
+            break;
+
+        case YAW_TEST_TO_ZERO:
+            Yaw_servo(0.0f, &hDJI[2]);
+            if (YawServo_IsArrived()) {
+                wait_start_tick = HAL_GetTick();
+                yaw_test_state = YAW_TEST_WAIT_ZERO;
+            }
+            break;
+
+        case YAW_TEST_WAIT_ZERO:
+            Yaw_servo(0.0f, &hDJI[2]);
+            if ((HAL_GetTick() - wait_start_tick) >= 2000U) {
+                YawServo_Reset();
+                yaw_test_state = YAW_TEST_TO_POS_180;
+            }
+            break;
+
+        default:
+            YawServo_Reset();
+            yaw_test_state = YAW_TEST_TO_POS_180;
+            break;
+    }
+}
+
+void Upper_Test_Task(void *argument)
+{
     osDelay(100);
     HostControl_Start(&huart4);
     for(;;){
@@ -46,7 +100,3 @@ void Upper_Test_Start(void)
     };
     (void)osThreadNew(Upper_Test_Task, NULL, &Upper_Test_attributes);
 }
-
-
-//KP=10最多500
-//
