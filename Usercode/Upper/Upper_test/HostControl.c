@@ -19,6 +19,11 @@ static uint8_t HostControl_IsValidAxis(uint8_t axis)
     return (axis == 0U || axis == 2U || axis == 3U);
 }
 
+static uint8_t HostControl_IsValidClaw(uint8_t servo_id)
+{
+    return (servo_id == 1U || servo_id == 2U);
+}
+
 static void HostControl_Send(const char *text)
 {
     if (s_host_uart == NULL || text == NULL) return;
@@ -27,14 +32,17 @@ static void HostControl_Send(const char *text)
 
 static void HostControl_SendStatus(void)
 {
-    char msg[192];
+    char msg[256];
     snprintf(msg, sizeof(msg),
              "DIST_TGT=%.2f YAW_TGT=%.2f ARM_TGT=%.2f "
+             "CLAW1_TGT=%u CLAW2_TGT=%u "
              "DIST_ACT=%.2f YAW_ACT=%.2f ARM_ACT=%.2f "
              "EN=%u%u%u STOP=%u\r\n",
              g_host_control.target_deg[0],
              g_host_control.target_deg[2],
              g_host_control.target_deg[3],
+             g_host_control.claw_target_deg[1],
+             g_host_control.claw_target_deg[2],
              lidar.distance_aver,
              hDJI[2].AxisData.AxisAngle_inDegree,
              hDJI[3].AxisData.AxisAngle_inDegree,
@@ -68,6 +76,14 @@ static void HostControl_SetAxis(uint8_t axis, float degree)
     g_host_control.stop_all = 0U;
 }
 
+static void HostControl_SetClaw(uint8_t servo_id, uint8_t degree)
+{
+    if (!HostControl_IsValidClaw(servo_id)) return;
+
+    g_host_control.claw_target_deg[servo_id] = degree;
+    Claw_degree_set(degree, servo_id);
+}
+
 void HostControl_StopAll(void)
 {
     memset(g_host_control.enabled, 0, sizeof(g_host_control.enabled));
@@ -89,6 +105,7 @@ static void HostControl_HandleLine(char *line)
     long axis = 0;
     float deg = 0.0f;
     float d0 = 0.0f, d2 = 0.0f, d3 = 0.0f;
+    float c1 = 0.0f, c2 = 0.0f;
     char arg1[8] = {0};
 
     while (*cursor == ' ' || *cursor == '\t') {
@@ -151,6 +168,66 @@ static void HostControl_HandleLine(char *line)
         HostControl_SetAxis(0, d0);
         HostControl_SetAxis(2, d2);
         HostControl_SetAxis(3, d3);
+        HostControl_Send("OK\r\n");
+        return;
+    }
+
+    if (strcmp(cmd, "CLAW") == 0) {
+        cursor += 4;
+        while (*cursor == ' ' || *cursor == '\t') cursor++;
+        axis = strtol(cursor, &endptr, 10);
+        if (cursor == endptr) {
+            HostControl_Send("ERR claw id\r\n");
+            return;
+        }
+
+        cursor = endptr;
+        while (*cursor == ' ' || *cursor == '\t') cursor++;
+        deg = strtof(cursor, &endptr);
+        if (cursor == endptr) {
+            HostControl_Send("ERR claw deg\r\n");
+            return;
+        }
+
+        if (!HostControl_IsValidClaw((uint8_t)axis)) {
+            HostControl_Send("ERR claw id\r\n");
+            return;
+        }
+
+        if (deg < 0.0f || deg > 180.0f) {
+            HostControl_Send("ERR claw range\r\n");
+            return;
+        }
+
+        HostControl_SetClaw((uint8_t)axis, (uint8_t)deg);
+        HostControl_Send("OK\r\n");
+        return;
+    }
+
+    if (strcmp(cmd, "CLAWALL") == 0) {
+        cursor += 7;
+        while (*cursor == ' ' || *cursor == '\t') cursor++;
+        c1 = strtof(cursor, &endptr);
+        if (cursor == endptr) {
+            HostControl_Send("ERR clawall 1\r\n");
+            return;
+        }
+
+        cursor = endptr;
+        while (*cursor == ' ' || *cursor == '\t') cursor++;
+        c2 = strtof(cursor, &endptr);
+        if (cursor == endptr) {
+            HostControl_Send("ERR clawall 2\r\n");
+            return;
+        }
+
+        if (c1 < 0.0f || c1 > 180.0f || c2 < 0.0f || c2 > 180.0f) {
+            HostControl_Send("ERR claw range\r\n");
+            return;
+        }
+
+        HostControl_SetClaw(1U, (uint8_t)c1);
+        HostControl_SetClaw(2U, (uint8_t)c2);
         HostControl_Send("OK\r\n");
         return;
     }
@@ -222,6 +299,8 @@ static void HostControl_HandleLine(char *line)
         HostControl_Send("SET 0 <distance_mm>\r\n");
         HostControl_Send("SET <2|3> <deg>\r\n");
         HostControl_Send("ALL <distance_mm> <deg2> <deg3>\r\n");
+        HostControl_Send("CLAW <1|2> <deg>\r\n");
+        HostControl_Send("CLAWALL <deg1> <deg2>\r\n");
         HostControl_Send("ZERO <0|2|3|ALL>\r\n");
         HostControl_Send("STREAM <ON|OFF>\r\n");
         HostControl_Send("GET\r\nSTOP\r\n");
@@ -239,6 +318,8 @@ void HostControl_Start(UART_HandleTypeDef *huart)
     memset(s_host_line, 0, sizeof(s_host_line));
     memset(&g_host_control, 0, sizeof(g_host_control));
     g_host_control.stop_all = 1U;
+    g_host_control.claw_target_deg[1] = 0U;
+    g_host_control.claw_target_deg[2] = 0U;
     g_host_control.stream_period_ms = 100U;
     g_host_control.last_stream_tick = HAL_GetTick();
 

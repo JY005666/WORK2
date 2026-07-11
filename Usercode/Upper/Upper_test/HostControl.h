@@ -5,10 +5,12 @@
 #include "usart.h"
 #include "DJI.h"
 #include "Caculate.h"
+#include "UpperClaw.h"
 
 typedef struct
 {
     float target_deg[4];
+    uint8_t claw_target_deg[3];
     uint8_t enabled[4];
     uint8_t stop_all;
     uint8_t stream_enabled;
