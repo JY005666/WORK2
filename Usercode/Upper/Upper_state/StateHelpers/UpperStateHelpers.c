@@ -229,6 +229,14 @@ void HandleActiveBeanDelivery(uint16_t next_stage_left, uint16_t next_stage_righ
 
     par.degree_claw = -650.0f;
 
+    /*
+     * 抓完第二/第三颗豆子后，必须先把升降轴抬到安全高度，
+     * 再允许底盘和云台进入送箱过程，避免“还没抬起来就开始走”。
+     */
+    if (hDJI[3].AxisData.AxisAngle_inDegree > -350.0f) {
+        return;
+    }
+
     if (active_bean == NULL) {
         return;
     }
