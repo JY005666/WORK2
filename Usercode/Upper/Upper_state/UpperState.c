@@ -129,8 +129,8 @@ static void HandleStage0(void)
 static void HandleStage10(void)
 {
 
-    par.degree_claw = -250.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree > -400.0f) {
+    par.degree_claw = -350.0f;
+    if (hDJI[3].AxisData.AxisAngle_inDegree > -500.0f) {
         Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
         osDelay(500);
         ResetDistanceAndChassisMotors();
@@ -202,7 +202,7 @@ void Bean_Init(void)
 
     bean[0].target_position = RIGHT_1;
     bean[1].target_position = LEFT_1;
-    bean[2].target_position = MIDDLE_0;
+    bean[2].target_position = RIGHT_1;
 }
 
 void Bean_Target_Set(void)

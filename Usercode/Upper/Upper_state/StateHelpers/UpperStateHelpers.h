@@ -7,7 +7,7 @@
 #define CLAW_DOWN 2
 #define CLAW_OPEN 120
 #define CLAW_HALF_OPEN 90
-#define CLAW_CLOSE 0
+#define CLAW_CLOSE 50
 
 #define SAFE_DIST_FOR_BOX_FINAL_TURN_MM  1500.0f
 #define FIRST_BEAN_LEFT_SAFE_CCW_DEG     (-80.0f)

@@ -190,6 +190,8 @@ void LiftAndRotateToPlacement(float lift_target, float lift_ready_threshold, flo
  */
 void HandleStage31_SecondBeanPickup(void)
 {
+
+    par.degree_claw = -600.0f;
     const Angle *next_target = NULL;
     uint16_t next_stage = 0;
 
@@ -213,9 +215,9 @@ void HandleStage31_SecondBeanPickup(void)
     if (next_target == NULL) {
         return;
     }
-
-    Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
     Claw_degree_set(next_target->claw_angle, CLAW_UP);
+    Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
+
     SetApproachTarget(next_target);
 
     if (IsDistanceAndChassisReady(5.0f, 2.0f)) {
@@ -321,7 +323,7 @@ void HandleStage900_ThirdBeanPickup(void)
 {
     const Angle *last_target = NULL;
 
-    par.degree_claw = -650.0f;
+    par.degree_claw = -600.0f;
 
     /*
      * 第三颗豆子在第二颗豆子的抓取路线确定时就已经记录下来，
@@ -372,6 +374,7 @@ void HandleStage30_FirstBeanPlacement(void)
     }
 
     Claw_degree_set(target_box->claw_angle, CLAW_UP);
+
     par.target_distance = target_box->distance;
 
     if (target_is_left_side) {
