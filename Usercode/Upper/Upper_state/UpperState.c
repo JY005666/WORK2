@@ -34,7 +34,7 @@ static void HandleStage0(void)
     if (lidar.distance_aver > 700.0f) {
         pid_reset(&hDJI[3], 5.0f, 0.0f, 0.0f);
         par.degree_claw = -600.0f;
-        par.degree_chassis = 60.0f;
+        par.degree_chassis = 30.0f;
         par.target_distance = bean_middle.distance;
     }
     if (lidar.distance_aver < 700.0f) {
@@ -62,8 +62,7 @@ static void HandleStage10(void)
 
 static void HandleStage20(void)
 {
-    par.degree_claw = -650.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree < -600.0f) {
+    if (ApplyDeliveryLiftGate(MIDDLE)) {
         stage_flag = 30;
     }
 }

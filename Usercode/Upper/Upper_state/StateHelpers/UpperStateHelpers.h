@@ -22,6 +22,18 @@
 #define SECOND_BEAN_LEFT_TO_RIGHT_AVOID_CCW_DEG   (60.0f)
 #define SECOND_BEAN_RIGHT_TO_LEFT_AVOID_CW_DEG    (-60.0f)
 
+/*
+ * 抓完豆子后开始送箱前，先把升降轴抬到安全高度。
+ * 这里按“当前抓的是哪一侧的豆子”分别给参数，后续只改这几组值即可。
+ */
+#define LEFT_BEAN_DELIVERY_LIFT_TARGET_DEG     (-650.0f) // 抓左豆子时，升降轴抬到的目标角度
+#define LEFT_BEAN_DELIVERY_LIFT_READY_DEG      (-400.0f) // 抓左豆子时，升降轴抬到的安全角度阈值
+#define RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG    (-650.0f)
+#define RIGHT_BEAN_DELIVERY_LIFT_READY_DEG     (-600.0f)
+#define MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG   (-650.0f)
+#define MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG    (-500.0f)
+
+uint8_t ApplyDeliveryLiftGate(BeanPosition bean_position);
 void SetApproachTarget(const Angle *target);
 void PrepareBeanPickup(const Angle *target, float claw_hold_degree, float arm_ready_threshold);
 uint8_t IsDistanceAndChassisReady(float distance_tol, float chassis_tol);

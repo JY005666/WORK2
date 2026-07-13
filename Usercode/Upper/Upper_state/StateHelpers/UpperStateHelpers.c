@@ -38,6 +38,23 @@ static uint8_t IsRightSideBox(BoxPosition position)
     return (uint8_t)((position == RIGHT_1) || (position == RIGHT_2));
 }
 
+uint8_t ApplyDeliveryLiftGate(BeanPosition bean_position)
+{
+    float lift_target = MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG;
+    float lift_ready = MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG;
+
+    if (bean_position == LEFT) {
+        lift_target = LEFT_BEAN_DELIVERY_LIFT_TARGET_DEG;
+        lift_ready = LEFT_BEAN_DELIVERY_LIFT_READY_DEG;
+    } else if (bean_position == RIGHT) {
+        lift_target = RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG;
+        lift_ready = RIGHT_BEAN_DELIVERY_LIFT_READY_DEG;
+    }
+
+    par.degree_claw = lift_target;
+    return (uint8_t)(hDJI[3].AxisData.AxisAngle_inDegree <= lift_ready);
+}
+
 static void FinishBeanPlacement(Bean *b, uint16_t next_stage)
 {
     if (b != NULL) {
@@ -176,7 +193,6 @@ void HandleStage31_SecondBeanPickup(void)
     const Angle *next_target = NULL;
     uint16_t next_stage = 0;
 
-    par.degree_claw = -650.0f;
 
     /*
      * 豆子和箱子的左右是相对关系：
@@ -227,17 +243,17 @@ void HandleActiveBeanDelivery(uint16_t next_stage_left, uint16_t next_stage_righ
     uint8_t used_ccw_avoid = 0U;
     float avoid_chassis_target = 0.0f;
 
-    par.degree_claw = -650.0f;
 
     /*
      * 抓完第二/第三颗豆子后，必须先把升降轴抬到安全高度，
      * 再允许底盘和云台进入送箱过程，避免“还没抬起来就开始走”。
      */
-    if (hDJI[3].AxisData.AxisAngle_inDegree > -350.0f) {
+
+    if (active_bean == NULL) {
         return;
     }
 
-    if (active_bean == NULL) {
+    if (!ApplyDeliveryLiftGate(active_bean->position)) {
         return;
     }
 
