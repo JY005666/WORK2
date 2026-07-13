@@ -29,25 +29,103 @@ BeanPosition g_third_bean_position = MIDDLE;
 uint8_t g_delivery_distance_enabled = 0U;
 uint8_t g_delivery_final_turn_enabled = 0U;
 
-static void HandleStage0(void)
+static void HandleStage0(void);
+static void HandleStage10(void);
+static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage);
+
+void Angle_Init(void);
+
+void Bean_Init(void);
+
+void Bean_Target_Set(void);
+
+void init_paramater(paramater *par);
+
+void Upper_State_Task(void *arg)
 {
-    if (lidar.distance_aver > 700.0f) {
-        pid_reset(&hDJI[3], 5.0f, 0.0f, 0.0f);
-        par.degree_claw = -600.0f;
-        par.degree_chassis = 30.0f;
-        par.target_distance = bean_middle.distance;
-    }
-    if (lidar.distance_aver < 700.0f) {
-        Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
-        Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
-        par.degree_chassis = bean_middle.chassis;
-        if (IsDistanceAndChassisReady(5.0f, 0.5f)) {
-            osDelay(300);
-            stage_flag = 10;
+    for (;;) {
+        switch (stage_flag) {
+            case 0:
+                HandleStage0(); //到达第一个抓取位置
+                break;
+            case 10:
+                HandleStage10(); //抓取第一个豆子
+                break;
+            case 20:  //上升爪子到打不到箱子
+                if (ApplyDeliveryLiftGate(MIDDLE)) {
+                    stage_flag = 30;
+                } 
+                break;
+            case 30:
+                HandleStage30_FirstBeanPlacement(); //放置第一个豆子
+                break;
+            case 31:
+                HandleStage31_SecondBeanPickup(); //到达第二个豆子抓取位置
+                break;
+            case 50:
+                HandleBeanGrabFinishAndAdvance(60); //抓取第二个豆子
+                break;
+            case 60:
+                HandleActiveBeanDelivery(70, 110); //第二个豆子的送箱与障碍规避
+                break;
+            case 70:
+                Bean_Place_Switch(&bean[1], 900); //左豆子
+                break;
+            case 110:
+                Bean_Place_Switch(&bean[0], 900); //右豆子
+                break;
+            case 900:
+                HandleStage900_ThirdBeanPickup();
+                break;
+            case 910:
+                HandleBeanGrabFinishAndAdvance(920);
+                break;
+            case 920:
+                HandleActiveBeanDelivery(930, 940);
+                break;
+            case 930:
+                Bean_Place_Switch(&bean[1], 1000);
+                break;
+            case 940:
+                Bean_Place_Switch(&bean[0], 1000);
+                break;
+            default:
+                break;
         }
+
+        osDelay(2);
     }
 }
 
+void Upper_State_Start(void)
+{
+    const osThreadAttr_t Upper_State_attributes = {
+        .name       = "Upper_State",
+        .stack_size = 128 * 10,
+        .priority   = (osPriority_t)osPriorityNormal,
+    };
+    (void)osThreadNew(Upper_State_Task, NULL, &Upper_State_attributes);
+}
+static void HandleStage0(void)
+{
+    par.degree_claw = -600.0f;
+    if(hDJI[3].AxisData.AxisAngle_inDegree<-5.0f){
+        if (lidar.distance_aver > 700.0f) {
+            par.degree_chassis = 30.0f;
+            par.target_distance = bean_middle.distance;
+        }
+        if (lidar.distance_aver < 700.0f) {
+            Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
+            Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
+            par.degree_chassis = bean_middle.chassis;
+            if (IsDistanceAndChassisReady(5.0f, 0.5f)) {
+                osDelay(300);
+                stage_flag = 10;
+            }
+        }
+    }
+
+}
 static void HandleStage10(void)
 {
 
@@ -59,22 +137,14 @@ static void HandleStage10(void)
         stage_flag = 20;
     }
 }
-
-static void HandleStage20(void)
-{
-    if (ApplyDeliveryLiftGate(MIDDLE)) {
-        stage_flag = 30;
-    }
-}
-
-static void HandleStage50(void)
+static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
 {
     if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
         par.degree_claw = -50.0f;
         if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -90.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
-            CloseClawAndAdvance(60);
+            CloseClawAndAdvance(next_stage);
         }
         return;
     }
@@ -84,38 +154,10 @@ static void HandleStage50(void)
         if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -120.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
-            CloseClawAndAdvance(60);
+            CloseClawAndAdvance(next_stage);
         }
     }
 }
-
-static void HandleStage910(void)
-{
-    if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
-        par.degree_claw = -50.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -90.0f) {
-            g_delivery_distance_enabled = 0U;
-            g_delivery_final_turn_enabled = 0U;
-            CloseClawAndAdvance(920);
-        }
-        return;
-    }
-
-    if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
-        par.degree_claw = -100.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -120.0f) {
-            g_delivery_distance_enabled = 0U;
-            g_delivery_final_turn_enabled = 0U;
-            CloseClawAndAdvance(920);
-        }
-    }
-}
-
-static void HandleStage920(void)
-{
-    HandleActiveBeanDelivery(930, 940);
-}
-
 void Angle_Init(void)
 {
     bean_left.distance = 310.0f;
@@ -181,68 +223,4 @@ void init_paramater(paramater *par)
     par->target_distance = lidar.distance_aver;
     par->degree_chassis = 0.0f;
     par->degree_claw = 0.0f;
-}
-
-void Upper_State_Task(void *arg)
-{
-    for (;;) {
-        switch (stage_flag) {
-            case 0:
-                HandleStage0(); //到达第一个抓取位置
-                break;
-            case 10:
-                HandleStage10(); //抓取第一个豆子
-                break;
-            case 20:
-                HandleStage20(); //上升爪子到打不到箱子
-                break;
-            case 30:
-                HandleStage30_FirstBeanPlacement(); //放置第一个豆子
-                break;
-            case 31:
-                HandleStage31_SecondBeanPickup(); //到达第二个豆子抓取位置
-                break;
-            case 50:
-                HandleStage50(); //抓取第二个豆子
-                break;
-            case 60:
-                HandleActiveBeanDelivery(70, 110); //第二个豆子的送箱与障碍规避
-                break;
-            case 70:
-                Bean_Place_Switch(&bean[1], 900); //左豆子
-                break;
-            case 110:
-                Bean_Place_Switch(&bean[0], 900); //右豆子
-                break;
-            case 900:
-                HandleStage900_ThirdBeanPickup();
-                break;
-            case 910:
-                HandleStage910();
-                break;
-            case 920:
-                HandleStage920();
-                break;
-            case 930:
-                Bean_Place_Switch(&bean[1], 1000);
-                break;
-            case 940:
-                Bean_Place_Switch(&bean[0], 1000);
-                break;
-            default:
-                break;
-        }
-
-        osDelay(2);
-    }
-}
-
-void Upper_State_Start(void)
-{
-    const osThreadAttr_t Upper_State_attributes = {
-        .name       = "Upper_State",
-        .stack_size = 128 * 10,
-        .priority   = (osPriority_t)osPriorityNormal,
-    };
-    (void)osThreadNew(Upper_State_Task, NULL, &Upper_State_attributes);
 }
