@@ -369,6 +369,8 @@ void Motor_State_Reset(DJI_t *motor) {
 
     // 3. 如果复位的是 distance 伺服电机，同步清除速度规划器状态
     DistanceServo_Reset(motor);
+    if (motor == &hDJI[2]) YawServo_Reset();
+    if (motor == &hDJI[3]) ArmServo_Reset();
 
     // 4. (可选) 如果你需要在代码里记录当前电机的多圈绝对角度，可能需要重新获取一下 offset
     // motor->encode_offset = motor->encode; // 视你的具体底层逻辑而定
@@ -408,6 +410,8 @@ void Reset_DJI_Motor_Full(DJI_t *ptr) {
     PID_Clear(&ptr->posPID);
     PID_Clear(&ptr->speedPID);
     DistanceServo_Reset(ptr);
+    if (ptr == &hDJI[2]) YawServo_Reset();
+    if (ptr == &hDJI[3]) ArmServo_Reset();
 }
 
 // ========== 云台 T 型速度规划（仿照示例 VelocityPlanning） ==========
@@ -428,6 +432,23 @@ typedef struct {
 
 static YawPlanner_t yaw_planner = {0};
 
+typedef struct {
+    uint8_t initialized;
+    uint8_t arrived;
+    uint8_t arrived_confirmed;
+    float target_degree;
+    float initial_angle;
+    float start_time;
+    float max_speed;
+    float accel_time;
+    float const_time;
+    float total_time;
+    float direction;
+    float last_planned_angle;
+} ArmPlanner_t;
+
+static ArmPlanner_t arm_planner = {0};
+
 void YawServo_Reset(void)
 {
     memset(&yaw_planner, 0, sizeof(yaw_planner));
@@ -436,6 +457,16 @@ void YawServo_Reset(void)
 uint8_t YawServo_IsArrived(void)
 {
     return yaw_planner.arrived_confirmed;
+}
+
+void ArmServo_Reset(void)
+{
+    memset(&arm_planner, 0, sizeof(arm_planner));
+}
+
+uint8_t ArmServo_IsArrived(void)
+{
+    return arm_planner.arrived_confirmed;
 }
 
 static void Yaw_Plan_Update(float target_degree, float current_degree, uint32_t now_tick)
@@ -518,8 +549,6 @@ void Yaw_servo(float target_degree, DJI_t *motor)
     uint32_t now_tick = HAL_GetTick();
     float current_degree = motor->AxisData.AxisAngle_inDegree;
     float servo_ref;
-    float planned_error;
-    float abs_planned_error;
     float target_error;
     float abs_target_error;
     uint8_t crossed_target = 0U;
@@ -556,19 +585,97 @@ void Yaw_servo(float target_degree, DJI_t *motor)
     }
 
     positionServo(servo_ref, motor);
+}
 
-    planned_error = servo_ref - current_degree;
-    abs_planned_error = fabsf(planned_error);
+static void Arm_Plan_Update(float target_degree, float current_degree, uint32_t now_tick)
+{
+    if (!arm_planner.initialized ||
+        fabsf(target_degree - arm_planner.target_degree) > 0.5f) {
 
-    if (!YawServo_IsArrived()) {
-        if (abs_planned_error >= YAW_MIN_OUTPUT_START_DEG &&
-            abs_planned_error <= YAW_MIN_OUTPUT_ACTIVE_DEG &&
-            fabsf(motor->FdbData.rpm) <= YAW_MIN_OUTPUT_SPEED_RPM &&
-            fabsf(motor->speedPID.output) < YAW_MIN_OUTPUT_CURRENT) {
-            motor->speedPID.output =
-                (planned_error >= 0.0f) ? YAW_MIN_OUTPUT_CURRENT : -YAW_MIN_OUTPUT_CURRENT;
+        arm_planner.target_degree = target_degree;
+        arm_planner.initial_angle = current_degree;
+        arm_planner.start_time = (float)now_tick;
+        arm_planner.arrived = 0U;
+        arm_planner.arrived_confirmed = 0U;
+        arm_planner.last_planned_angle = current_degree;
+
+        {
+            float angle_diff = target_degree - current_degree;
+            float abs_diff = fabsf(angle_diff);
+            float accel_time = ARM_MAX_SPEED_DEG_PER_S / ARM_ACCEL_DEG_PER_S2;
+            float accel_dist = 0.5f * ARM_ACCEL_DEG_PER_S2 * accel_time * accel_time;
+            float const_time = (abs_diff - 2.0f * accel_dist) / ARM_MAX_SPEED_DEG_PER_S;
+
+            arm_planner.direction = (angle_diff > 0.0f) ? 1.0f : -1.0f;
+
+            if (const_time > 0.0f) {
+                arm_planner.max_speed = ARM_MAX_SPEED_DEG_PER_S;
+                arm_planner.accel_time = accel_time;
+                arm_planner.const_time = const_time;
+                arm_planner.total_time = 2.0f * accel_time + const_time;
+            } else {
+                float v_peak = sqrtf(abs_diff * ARM_ACCEL_DEG_PER_S2);
+                arm_planner.max_speed = v_peak;
+                arm_planner.accel_time = v_peak / ARM_ACCEL_DEG_PER_S2;
+                arm_planner.const_time = 0.0f;
+                arm_planner.total_time = 2.0f * arm_planner.accel_time;
+            }
         }
+
+        arm_planner.initialized = 1U;
     }
+
+    {
+        float elapsed = ((float)now_tick - arm_planner.start_time) * 0.001f;
+        float planned_angle;
+
+        if (elapsed >= arm_planner.total_time) {
+            planned_angle = arm_planner.target_degree;
+        } else if (elapsed <= arm_planner.accel_time) {
+            planned_angle = arm_planner.initial_angle +
+                            arm_planner.direction * 0.5f * ARM_ACCEL_DEG_PER_S2 * elapsed * elapsed;
+        } else if (elapsed <= arm_planner.accel_time + arm_planner.const_time) {
+            float t_acc = arm_planner.accel_time;
+            float accel_dist = 0.5f * ARM_ACCEL_DEG_PER_S2 * t_acc * t_acc;
+            planned_angle = arm_planner.initial_angle +
+                            arm_planner.direction * (accel_dist + arm_planner.max_speed * (elapsed - t_acc));
+        } else {
+            float t_acc = arm_planner.accel_time;
+            float t_const = arm_planner.const_time;
+            float accel_dist = 0.5f * ARM_ACCEL_DEG_PER_S2 * t_acc * t_acc;
+            float const_dist = arm_planner.max_speed * t_const;
+            float t_dec = elapsed - t_acc - t_const;
+            planned_angle = arm_planner.initial_angle +
+                            arm_planner.direction * (
+                                accel_dist + const_dist +
+                                arm_planner.max_speed * t_dec - 0.5f * ARM_ACCEL_DEG_PER_S2 * t_dec * t_dec
+                            );
+        }
+
+        arm_planner.last_planned_angle = planned_angle;
+    }
+
+    if (fabsf(target_degree - current_degree) <= ARM_POS_TOL_DEG) {
+        arm_planner.arrived = 1U;
+        arm_planner.arrived_confirmed = 1U;
+    } else {
+        arm_planner.arrived = 0U;
+        arm_planner.arrived_confirmed = 0U;
+    }
+}
+
+void Arm_servo(float target_degree, DJI_t *motor)
+{
+    uint32_t now_tick;
+    float current_degree;
+
+    if (motor == NULL) return;
+
+    now_tick = HAL_GetTick();
+    current_degree = motor->AxisData.AxisAngle_inDegree;
+
+    Arm_Plan_Update(target_degree, current_degree, now_tick);
+    positionServo(arm_planner.last_planned_angle, motor);
 }
 
 

@@ -95,6 +95,8 @@ void HostControl_StopAll(void)
     PID_Clear(&hDJI[2].speedPID);
     PID_Clear(&hDJI[3].posPID);
     PID_Clear(&hDJI[3].speedPID);
+    YawServo_Reset();
+    ArmServo_Reset();
 }
 
 static void HostControl_HandleLine(char *line)

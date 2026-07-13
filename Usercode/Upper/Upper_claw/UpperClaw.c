@@ -32,7 +32,7 @@ void Claw_degree_set(uint8_t degree, uint8_t servoID){
     }
 }
 void Claw_test(){
-    Claw_degree_set(100, 2);
+    Claw_degree_set(120, 2);
     osDelay(1500);
     Claw_degree_set(50, 2);
 

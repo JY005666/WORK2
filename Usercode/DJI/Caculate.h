@@ -34,14 +34,17 @@ extern uint16_t distance_offset;
 #define YAW_POS_TOL_DEG               1.0f
 #define YAW_ONE_WAY_APPROACH_DEG      6.0f
 #define YAW_ONE_WAY_OVERSHOOT_DEG     2.0f
-#define YAW_MIN_OUTPUT_START_DEG      0.8f
-#define YAW_MIN_OUTPUT_ACTIVE_DEG     8.0f
-#define YAW_MIN_OUTPUT_CURRENT        260.0f
-#define YAW_MIN_OUTPUT_SPEED_RPM      25.0f
+
+#define ARM_MAX_SPEED_DEG_PER_S       920.0f
+#define ARM_ACCEL_DEG_PER_S2          1500.0f
+#define ARM_POS_TOL_DEG               1.0f
 
 void YawServo_Reset(void);
 uint8_t YawServo_IsArrived(void);
 void Yaw_servo(float target_degree, DJI_t *motor);
+void ArmServo_Reset(void);
+uint8_t ArmServo_IsArrived(void);
+void Arm_servo(float target_degree, DJI_t *motor);
 
 void PID_Calc(PID_t *pid);
 void P_Calc(PID_t *pid);

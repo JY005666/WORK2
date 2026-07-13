@@ -119,39 +119,38 @@ static void HandleStage920(void)
 
 void Angle_Init(void)
 {
-    bean_left.distance = 300.0f;
-    bean_left.chassis = -110.0f;
-    bean_left.claw_angle = 120;
+    bean_left.distance = 310.0f;
+    bean_left.chassis = -95.0f;
+    bean_left.claw_angle = 115;
 
     bean_right.distance = 300.0f;
     bean_right.chassis = 85.0f;
-    bean_right.claw_angle = 50;
+    bean_right.claw_angle = 53;
 
-    bean_middle.distance = 656.0f;
-    bean_middle.chassis = -6.0f;
+    bean_middle.distance = 687.0f;
+    bean_middle.chassis = -4.0f;
     bean_middle.claw_angle = 85;
 
-    box_left_2.distance = 2400.0f;
-    box_left_2.chassis = 350.0f;
-    box_left_2.claw_angle = 70;
+    box_left_2.distance = 2500.0f;
+    box_left_2.chassis = 345.0f;
+    box_left_2.claw_angle = 58;
 
-    box_left_1.distance = 2200.0f;
-    box_left_1.chassis = 475.0f;
-    box_left_1.claw_angle = 110;
+    box_left_1.distance = 2273.0f;
+    box_left_1.chassis = 461.0f;
+    box_left_1.claw_angle = 105;
 
-    box_middle_0.distance = 2295.0f;
-    box_middle_0.chassis = -541.0f;
-    box_middle_0_chassis_cw = 525.0f;
-    box_middle_0_chassis_ccw = -545.0f;
+    box_middle_0.distance = 2180.0f;
+    box_middle_0_chassis_cw = 537.0f;
+    box_middle_0_chassis_ccw = -548.0f;
     box_middle_0.claw_angle = 85;
 
-    box_right_1.distance = 2200.0f;
-    box_right_1.chassis = -460.0f;
-    box_right_1.claw_angle = 55;
+    box_right_1.distance = 2275.0f;
+    box_right_1.chassis = -470.0f;
+    box_right_1.claw_angle = 60;
 
-    box_right_2.distance = 2400.0f;
-    box_right_2.chassis = -360.0f;
-    box_right_2.claw_angle = 100;
+    box_right_2.distance = 2495.0f;
+    box_right_2.chassis = -354.0f;
+    box_right_2.claw_angle = 112;
 }
 
 void Bean_Init(void)

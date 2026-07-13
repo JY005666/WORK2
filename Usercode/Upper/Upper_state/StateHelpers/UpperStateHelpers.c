@@ -57,13 +57,23 @@ static void TryPlaceBean(Bean *b,
                          float distance_tol,
                          uint16_t next_stage)
 {
+    float placement_chassis = 0.0f;
+
     if (b == NULL || target_box == NULL) {
         return;
     }
 
+    if ((b->target_position == MIDDLE_0) && (b->position == LEFT)) {
+        placement_chassis = box_middle_0_chassis_cw;
+    } else if ((b->target_position == MIDDLE_0) && (b->position == RIGHT)) {
+        placement_chassis = box_middle_0_chassis_ccw;
+    } else {
+        placement_chassis = target_box->chassis;
+    }
+
     Claw_degree_set(target_box->claw_angle, CLAW_UP);
     par.target_distance = target_box->distance;
-    par.degree_chassis = target_box->chassis;
+    par.degree_chassis = placement_chassis;
 
     if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < chassis_tol) &&
         (abs(lidar.distance_aver - par.target_distance) < distance_tol)) {

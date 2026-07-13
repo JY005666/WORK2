@@ -10,13 +10,24 @@ void DJI_Init(){
 	hDJI[3].motorType = M3508;
 	for (int i = 0; i < 8; i++)
     {
-			if(hDJI[i].motorType == M3508){
+			if(hDJI[i].motorType == M3508&&i== 2){ //云台转动
 				hDJI[i].reductionRate = 3591.0f/187.0f;
 				hDJI[i].speedPID.KP = 12;
 				hDJI[i].speedPID.KI = 0.2;
 				hDJI[i].speedPID.KD = 5;
 				hDJI[i].speedPID.outputMax = 8000;
-				hDJI[i].posPID.KP =8.0f;
+				hDJI[i].posPID.KP =10.0f;
+				hDJI[i].posPID.KI = 0.0f;
+				hDJI[i].posPID.KD = 5.0f;
+				hDJI[i].posPID.outputMax = 5000;
+			}
+			else if(hDJI[i].motorType == M3508&&i== 3){ //云台转动
+				hDJI[i].reductionRate = 3591.0f/187.0f;
+				hDJI[i].speedPID.KP = 12;
+				hDJI[i].speedPID.KI = 0.2;
+				hDJI[i].speedPID.KD = 5;
+				hDJI[i].speedPID.outputMax = 8000;
+				hDJI[i].posPID.KP =20.0f;
 				hDJI[i].posPID.KI = 0.0f;
 				hDJI[i].posPID.KD = 0.0f;
 				hDJI[i].posPID.outputMax = 5000;

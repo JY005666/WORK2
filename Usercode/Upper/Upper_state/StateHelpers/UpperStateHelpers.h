@@ -5,8 +5,8 @@
 
 #define CLAW_UP 1
 #define CLAW_DOWN 2
-#define CLAW_OPEN 106
-#define CLAW_HALF_OPEN 70
+#define CLAW_OPEN 120
+#define CLAW_HALF_OPEN 90
 #define CLAW_CLOSE 0
 
 /*

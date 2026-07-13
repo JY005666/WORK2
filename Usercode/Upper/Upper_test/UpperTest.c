@@ -82,7 +82,7 @@ void Upper_Test_Task(void *argument)
         }
 
         if (g_host_control.enabled[3]) {
-            positionServo(g_host_control.target_deg[3], &hDJI[3]);
+            Arm_servo(g_host_control.target_deg[3], &hDJI[3]);
             iq3 = (int16_t)hDJI[3].speedPID.output;
         }
 
