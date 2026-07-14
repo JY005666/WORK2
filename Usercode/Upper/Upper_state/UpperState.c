@@ -75,13 +75,13 @@ void Upper_State_Task(void *arg)
                 Bean_Place_Switch(&bean[0], 900); //右豆子
                 break;
             case 900:
-                HandleStage900_ThirdBeanPickup();
+                HandleStage900_ThirdBeanPickup(); //到达第三个豆子抓取位置
                 break;
             case 910:
-                HandleBeanGrabFinishAndAdvance(920);
+                HandleBeanGrabFinishAndAdvance(920); //抓取第三个豆子
                 break;
             case 920:
-                HandleActiveBeanDelivery(930, 940);
+                HandleActiveBeanDelivery(930, 940); //第三个豆子的送箱与障碍规避
                 break;
             case 930:
                 Bean_Place_Switch(&bean[1], 1000);
@@ -117,6 +117,7 @@ static void HandleStage0(void)
         if (lidar.distance_aver < 700.0f) {
             Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
             Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
+
             par.degree_chassis = bean_middle.chassis;
             if (IsDistanceAndChassisReady(5.0f, 0.5f)) {
                 osDelay(300);
@@ -129,10 +130,10 @@ static void HandleStage0(void)
 static void HandleStage10(void)
 {
 
-    par.degree_claw = -350.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree > -500.0f) {
+    par.degree_claw = -250.0f;
+    if (hDJI[3].AxisData.AxisAngle_inDegree > -375.0f) {
         Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
-        osDelay(500);
+        osDelay(800);
         ResetDistanceAndChassisMotors();
         stage_flag = 20;
     }
@@ -140,8 +141,8 @@ static void HandleStage10(void)
 static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
 {
     if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
-        par.degree_claw = -50.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -90.0f) {
+        par.degree_claw = -100.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -150.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
             CloseClawAndAdvance(next_stage);
