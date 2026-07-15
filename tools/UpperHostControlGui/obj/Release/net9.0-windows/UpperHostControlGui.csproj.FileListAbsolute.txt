@@ -1,0 +1,5 @@
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net9.0-windows\UpperHostControlGui.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net9.0-windows\UpperHostControlGui.AssemblyInfoInputs.cache
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net9.0-windows\UpperHostControlGui.AssemblyInfo.cs
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net9.0-windows\UpperHostControlGui.csproj.CoreCompileInputs.cache
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net9.0-windows\UpperHostControlGui.sourcelink.json

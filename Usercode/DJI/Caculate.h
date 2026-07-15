@@ -36,7 +36,7 @@ extern uint16_t distance_offset;
 #define YAW_ONE_WAY_OVERSHOOT_DEG     2.0f
 
 #define ARM_MAX_SPEED_DEG_PER_S       920.0f
-#define ARM_ACCEL_DEG_PER_S2          1500.0f
+#define ARM_ACCEL_DEG_PER_S2          600.0f
 #define ARM_POS_TOL_DEG               1.0f
 
 void YawServo_Reset(void);

@@ -1,0 +1,11 @@
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.csproj.AssemblyReference.cache
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.AssemblyInfoInputs.cache
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.AssemblyInfo.cs
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.csproj.CoreCompileInputs.cache
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.sourcelink.json
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\bin\Release\net48\UpperHostControlGui.exe.config
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\bin\Release\net48\UpperHostControlGui.exe
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\bin\Release\net48\UpperHostControlGui.pdb
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.exe
+C:\Users\22417\Desktop\workwrok\WORK2\tools\UpperHostControlGui\obj\Release\net48\UpperHostControlGui.pdb

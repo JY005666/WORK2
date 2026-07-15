@@ -220,7 +220,7 @@ void HandleStage31_SecondBeanPickup(void)
 
     SetApproachTarget(next_target);
 
-    if (IsDistanceAndChassisReady(5.0f, 2.0f)) {
+    if (IsDistanceAndChassisReady(5.0f, 4.0f)) {
         stage_flag = next_stage;
     }
 }
@@ -350,7 +350,7 @@ void HandleStage900_ThirdBeanPickup(void)
     Claw_degree_set(last_target->claw_angle, CLAW_UP);
     SetApproachTarget(last_target);
 
-    if (IsDistanceAndChassisReady(5.0f, 2.0f)) {
+    if (IsDistanceAndChassisReady(10.0f, 3.0f)) {
         stage_flag = 910;
     }
 }

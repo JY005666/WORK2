@@ -53,6 +53,7 @@ void Upper_State_Task(void *arg)
                 break;
             case 20:  //上升爪子到打不到箱子
                 if (ApplyDeliveryLiftGate(MIDDLE)) {
+                    osDelay(300000);
                     stage_flag = 30;
                 } 
                 break;
@@ -110,11 +111,11 @@ static void HandleStage0(void)
 {
     par.degree_claw = -600.0f;
     if(hDJI[3].AxisData.AxisAngle_inDegree<-5.0f){
-        if (lidar.distance_aver > 700.0f) {
+        if (lidar.distance_aver > 1000.0f) {
             par.degree_chassis = 30.0f;
             par.target_distance = bean_middle.distance;
         }
-        if (lidar.distance_aver < 700.0f) {
+        if (lidar.distance_aver < 1000.0f) {
             Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
             Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
 
@@ -129,11 +130,10 @@ static void HandleStage0(void)
 }
 static void HandleStage10(void)
 {
-
-    par.degree_claw = -250.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree > -375.0f) {
+    par.degree_claw = -380.0f;
+    if (hDJI[3].AxisData.AxisAngle_inDegree > -385.0f) {
         Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
-        osDelay(800);
+        osDelay(500);
         ResetDistanceAndChassisMotors();
         stage_flag = 20;
     }
@@ -170,7 +170,7 @@ void Angle_Init(void)
     bean_right.claw_angle = 53;
 
     bean_middle.distance = 687.0f;
-    bean_middle.chassis = -4.0f;
+    bean_middle.chassis = -2.0f;
     bean_middle.claw_angle = 85;
 
     box_left_2.distance = 2500.0f;
@@ -203,7 +203,7 @@ void Bean_Init(void)
 
     bean[0].target_position = RIGHT_1;
     bean[1].target_position = LEFT_1;
-    bean[2].target_position = RIGHT_1;
+    bean[2].target_position = MIDDLE_0;
 }
 
 void Bean_Target_Set(void)
