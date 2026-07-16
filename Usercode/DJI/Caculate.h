@@ -16,11 +16,11 @@
 #define DIST_SERVO_TARGET_CHANGE_TOL_MM 0.5f
 #define DIST_SERVO_MAX_SPEED_RPM      9500.0f
 #define DIST_SERVO_KP_RPM_PER_MM      34.0f
-#define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM 32000.0f
+#define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM 50000.0f
 #define DIST_SERVO_MIN_MOVE_RPM       140.0f
 #define DIST_SERVO_APPROACH_SPEED_RPM 220.0f
-#define DIST_SERVO_ACCEL_RPM_PER_S    12000.0f
-#define DIST_SERVO_DECEL_RPM_PER_S    14000.0f
+#define DIST_SERVO_ACCEL_RPM_PER_S    22000.0f
+#define DIST_SERVO_DECEL_RPM_PER_S    24000.0f
 #define DIST_SERVO_DEFAULT_DT_S       0.001f
 #define DIST_SERVO_MAX_DT_S           0.020f
 #define DIST_SERVO_SENSOR_MIN_MM      20.0f
@@ -36,7 +36,7 @@ extern uint16_t distance_offset;
 #define YAW_ONE_WAY_OVERSHOOT_DEG     2.0f
 
 #define ARM_MAX_SPEED_DEG_PER_S       920.0f
-#define ARM_ACCEL_DEG_PER_S2          600.0f
+#define ARM_ACCEL_DEG_PER_S2          1500.0f
 #define ARM_POS_TOL_DEG               1.0f
 
 void YawServo_Reset(void);

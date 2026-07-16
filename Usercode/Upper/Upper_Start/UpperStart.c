@@ -41,7 +41,7 @@ void StartDefaultTask(void *argument){
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){
-        // printf("%f %f %f\r\n", lidar.distance_aver, hDJI[2].AxisData.AxisAngle_inDegree, hDJI[3].AxisData.AxisAngle_inDegree);
+        printf("%f %f %f\r\n", lidar.distance_aver, hDJI[2].AxisData.AxisAngle_inDegree, hDJI[3].AxisData.AxisAngle_inDegree);
         osDelay(50);
     }
 }

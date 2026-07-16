@@ -393,9 +393,9 @@ void HandleStage30_FirstBeanPlacement(void)
 
     /* 先完成底盘与云台对位，再执行放置动作。 */
     if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-        (abs(lidar.distance_aver - par.target_distance) < 5.0f)) {
-        par.degree_claw = -170.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -230.0f) {
+        (abs(lidar.distance_aver - par.target_distance) < 10.0f)) {
+        par.degree_claw = -230.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -240.0f) {
             Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
             osDelay(500);
             /*

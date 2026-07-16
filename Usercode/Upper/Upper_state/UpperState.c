@@ -53,7 +53,6 @@ void Upper_State_Task(void *arg)
                 break;
             case 20:  //上升爪子到打不到箱子
                 if (ApplyDeliveryLiftGate(MIDDLE)) {
-                    osDelay(300000);
                     stage_flag = 30;
                 } 
                 break;
@@ -130,8 +129,8 @@ static void HandleStage0(void)
 }
 static void HandleStage10(void)
 {
-    par.degree_claw = -380.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree > -385.0f) {
+    par.degree_claw = -360.0f;
+    if (hDJI[3].AxisData.AxisAngle_inDegree > -365.0f) {
         Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
         osDelay(500);
         ResetDistanceAndChassisMotors();
@@ -141,8 +140,8 @@ static void HandleStage10(void)
 static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
 {
     if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
-        par.degree_claw = -100.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -150.0f) {
+        par.degree_claw = -300.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -310.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
             CloseClawAndAdvance(next_stage);
@@ -151,8 +150,8 @@ static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
     }
 
     if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
-        par.degree_claw = -100.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -120.0f) {
+        par.degree_claw = -150.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -160.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
             CloseClawAndAdvance(next_stage);
@@ -201,8 +200,8 @@ void Bean_Init(void)
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
 
-    bean[0].target_position = RIGHT_1;
-    bean[1].target_position = LEFT_1;
+    bean[0].target_position = LEFT_1;
+    bean[1].target_position = RIGHT_1;
     bean[2].target_position = MIDDLE_0;
 }
 
