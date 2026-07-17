@@ -426,10 +426,10 @@ void Bean_Place_Switch(Bean *b, uint16_t next_stage)
             TryPlaceBean(b, &box_middle_0, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
         } break;
         case RIGHT_1: {
-            TryPlaceBean(b, &box_right_1, -170.0f, -200.0f, 8.0f, 5.0f, next_stage);
+            TryPlaceBean(b, &box_right_1, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
         } break;
         case RIGHT_2: {
-            TryPlaceBean(b, &box_right_2, -190.0f, -230.0f, 8.0f, 5.0f, next_stage);
+            TryPlaceBean(b, &box_right_2, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
         } break;
     }
 }

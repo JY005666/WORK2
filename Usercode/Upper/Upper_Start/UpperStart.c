@@ -35,13 +35,13 @@ void StartDefaultTask(void *argument){
 
     //启动线程
     // Claw_test();
-    // Upper_Test_Start();//上位机测试线程（串口）
-    Upper_State_Start();
-    Upper_Servo_Start();
+    Upper_Test_Start();//上位机测试线程（串口）
+    // Upper_State_Start();
+    // Upper_Servo_Start();
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){
-        printf("%f %f %f\r\n", lidar.distance_aver, hDJI[2].AxisData.AxisAngle_inDegree, hDJI[3].AxisData.AxisAngle_inDegree);
+        // printf("%f %f %f\r\n", lidar.distance_aver, hDJI[2].AxisData.AxisAngle_inDegree, hDJI[3].AxisData.AxisAngle_inDegree);
         osDelay(50);
     }
 }

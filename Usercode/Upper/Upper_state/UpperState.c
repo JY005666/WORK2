@@ -60,6 +60,7 @@ void Upper_State_Task(void *arg)
                 HandleStage30_FirstBeanPlacement(); //放置第一个豆子
                 break;
             case 31:
+            while(1);
                 HandleStage31_SecondBeanPickup(); //到达第二个豆子抓取位置
                 break;
             case 50:
@@ -119,7 +120,7 @@ static void HandleStage0(void)
             Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
 
             par.degree_chassis = bean_middle.chassis;
-            if (IsDistanceAndChassisReady(5.0f, 0.5f)) {
+            if (IsDistanceAndChassisReady(5.0f, 3.0f)) {
                 osDelay(300);
                 stage_flag = 10;
             }
@@ -169,7 +170,7 @@ void Angle_Init(void)
     bean_right.claw_angle = 53;
 
     bean_middle.distance = 687.0f;
-    bean_middle.chassis = -2.0f;
+    bean_middle.chassis = -1.0f;
     bean_middle.claw_angle = 85;
 
     box_left_2.distance = 2500.0f;
