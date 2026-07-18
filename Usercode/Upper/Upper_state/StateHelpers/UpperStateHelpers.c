@@ -220,7 +220,7 @@ void HandleStage31_SecondBeanPickup(void)
 
     SetApproachTarget(next_target);
 
-    if (IsDistanceAndChassisReady(5.0f, 4.0f)) {
+    if (IsDistanceAndChassisReady(5.0f, 2.0f)) {
         stage_flag = next_stage;
     }
 }
@@ -350,7 +350,7 @@ void HandleStage900_ThirdBeanPickup(void)
     Claw_degree_set(last_target->claw_angle, CLAW_UP);
     SetApproachTarget(last_target);
 
-    if (IsDistanceAndChassisReady(10.0f, 3.0f)) {
+    if (IsDistanceAndChassisReady(10.0f, 1.0f)) {
         stage_flag = 910;
     }
 }
@@ -393,9 +393,9 @@ void HandleStage30_FirstBeanPlacement(void)
 
     /* 先完成底盘与云台对位，再执行放置动作。 */
     if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-        (abs(lidar.distance_aver - par.target_distance) < 10.0f)) {
-        par.degree_claw = -230.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -240.0f) {
+        (abs(lidar.distance_aver - par.target_distance) < 8.0f)) {
+        par.degree_claw = -300.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -310.0f) {
             Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
             osDelay(500);
             /*
@@ -417,19 +417,19 @@ void Bean_Place_Switch(Bean *b, uint16_t next_stage)
 
     switch (b->target_position) {
         case LEFT_2: {
-            TryPlaceBean(b, &box_left_2, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
+            TryPlaceBean(b, &box_left_2, -310.0f, -300.0f, 8.0f, 5.0f, next_stage);
         } break;
         case LEFT_1: {
-            TryPlaceBean(b, &box_left_1, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
+            TryPlaceBean(b, &box_left_1, -310.0f, -300.0f, 8.0f, 5.0f, next_stage);
         } break;
         case MIDDLE_0: {
-            TryPlaceBean(b, &box_middle_0, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
+            TryPlaceBean(b, &box_middle_0, -310.0f, -300.0f, 8.0f, 5.0f, next_stage);
         } break;
         case RIGHT_1: {
-            TryPlaceBean(b, &box_right_1, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
+            TryPlaceBean(b, &box_right_1, -310.0f, -300.0f, 8.0f, 5.0f, next_stage);
         } break;
         case RIGHT_2: {
-            TryPlaceBean(b, &box_right_2, -170.0f, -230.0f, 8.0f, 5.0f, next_stage);
+            TryPlaceBean(b, &box_right_2, -310.0f, -300.0f, 8.0f, 5.0f, next_stage);
         } break;
     }
 }
