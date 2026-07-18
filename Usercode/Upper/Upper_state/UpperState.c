@@ -60,7 +60,6 @@ void Upper_State_Task(void *arg)
                 HandleStage30_FirstBeanPlacement(); //放置第一个豆子
                 break;
             case 31:
-            while(1);
                 HandleStage31_SecondBeanPickup(); //到达第二个豆子抓取位置
                 break;
             case 50:
@@ -141,8 +140,8 @@ static void HandleStage10(void)
 static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
 {
     if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
-        par.degree_claw = -300.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -310.0f) {
+        par.degree_claw = -100.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -110.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
             CloseClawAndAdvance(next_stage);

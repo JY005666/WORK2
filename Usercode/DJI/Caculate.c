@@ -520,6 +520,7 @@ typedef struct {
     uint8_t arrived;
     uint8_t arrived_confirmed;
     float target_degree;
+    uint8_t use_position_servo;
     float last_speed_ref;
     float filtered_degree;
     uint32_t last_tick;
@@ -592,6 +593,7 @@ static void Yaw_Plan_Update(float target_degree, float current_degree, uint32_t 
         yaw_planner.initialized = 1U;
         yaw_planner.motor = NULL;
         yaw_planner.target_degree = target_degree;
+        yaw_planner.use_position_servo = (uint8_t)(fabsf(target_degree - current_degree) < 180.0f);
         yaw_planner.last_speed_ref = 0.0f;
         yaw_planner.filtered_degree = current_degree;
         yaw_planner.last_tick = HAL_GetTick();
@@ -602,6 +604,7 @@ static void Yaw_Plan_Update(float target_degree, float current_degree, uint32_t 
 
     if (fabsf(target_degree - yaw_planner.target_degree) > 0.5f) {
         yaw_planner.target_degree = target_degree;
+        yaw_planner.use_position_servo = (uint8_t)(fabsf(target_degree - current_degree) < 180.0f);
         yaw_planner.arrived = 0U;
         yaw_planner.arrived_confirmed = 0U;
         yaw_planner.arrived_tick = 0U;
@@ -631,6 +634,20 @@ void Yaw_servo(float target_degree, DJI_t *motor)
     now_tick = HAL_GetTick();
     current_degree = motor->AxisData.AxisAngle_inDegree;
     Yaw_Plan_Update(target_degree, current_degree, now_tick);
+
+    if (yaw_planner.use_position_servo) {
+        positionServo(target_degree, motor);
+        yaw_planner.last_tick = now_tick;
+        yaw_planner.motor = motor;
+        yaw_planner.arrived = (uint8_t)(fabsf(target_degree - current_degree) <= YAW_POS_TOL_DEG);
+        yaw_planner.arrived_confirmed = yaw_planner.arrived;
+        if (yaw_planner.arrived) {
+            yaw_planner.arrived_tick = now_tick;
+        } else {
+            yaw_planner.arrived_tick = 0U;
+        }
+        return;
+    }
 
     if (yaw_planner.last_tick == 0U) {
         dt = 0.001f;
