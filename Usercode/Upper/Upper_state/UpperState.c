@@ -109,7 +109,7 @@ void Upper_State_Start(void)
 static void HandleStage0(void)
 {
     par.degree_claw = -600.0f;
-    if(hDJI[3].AxisData.AxisAngle_inDegree<-5.0f){
+    if(hDJI[3].AxisData.AxisAngle_inDegree<-15.0f){
         if (lidar.distance_aver > 1000.0f) {
             par.degree_chassis = 50.0f;
             par.target_distance = bean_middle.distance;
@@ -140,8 +140,8 @@ static void HandleStage10(void)
 static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
 {
     if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
-        par.degree_claw = -100.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -110.0f) {
+        par.degree_claw = -130.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -140.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
             CloseClawAndAdvance(next_stage);
@@ -150,8 +150,8 @@ static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
     }
 
     if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
-        par.degree_claw = -170.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -180.0f) {
+        par.degree_claw = -190.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -200.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
             CloseClawAndAdvance(next_stage);
