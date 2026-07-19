@@ -160,11 +160,11 @@ static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
 }
 void Angle_Init(void)
 {
-    bean_left.distance = 300.0f;
+    bean_left.distance = 272.0f;
     bean_left.chassis = -92.0f;
     bean_left.claw_angle = 115;
 
-    bean_right.distance = 300.0f;
+    bean_right.distance = 272.0f;
     bean_right.chassis = 83.0f;
     bean_right.claw_angle = 53;
 
@@ -200,8 +200,8 @@ void Bean_Init(void)
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
 
-    bean[0].target_position = LEFT_1;
-    bean[1].target_position = RIGHT_1;
+    bean[0].target_position = LEFT_2;
+    bean[1].target_position = RIGHT_2;
     bean[2].target_position = MIDDLE_0;
 }
 
