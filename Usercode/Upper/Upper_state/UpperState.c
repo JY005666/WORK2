@@ -129,8 +129,8 @@ static void HandleStage0(void)
 }
 static void HandleStage10(void)
 {
-    par.degree_claw = -360.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree > -365.0f) {
+    par.degree_claw = -325.0f;
+    if (hDJI[3].AxisData.AxisAngle_inDegree > -335.0f) {
         Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
         osDelay(500);
         ResetDistanceAndChassisMotors();
@@ -150,8 +150,8 @@ static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
     }
 
     if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
-        par.degree_claw = -200.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -210.0f) {
+        par.degree_claw = -170.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -180.0f) {
             g_delivery_distance_enabled = 0U;
             g_delivery_final_turn_enabled = 0U;
             CloseClawAndAdvance(next_stage);
@@ -165,7 +165,7 @@ void Angle_Init(void)
     bean_left.claw_angle = 115;
 
     bean_right.distance = 300.0f;
-    bean_right.chassis = 85.0f;
+    bean_right.chassis = 83.0f;
     bean_right.claw_angle = 53;
 
     bean_middle.distance = 687.0f;

@@ -30,8 +30,8 @@
 #define DIST_SERVO_STABLE_MS          200
 
 /* 距离伺服实际有效区间，超出这个范围的测距直接视为无效。 */
-#define DIST_SERVO_EFFECTIVE_MIN_MM   200.0f
-#define DIST_SERVO_EFFECTIVE_MAX_MM   2600.0f
+#define DIST_SERVO_EFFECTIVE_MIN_MM   100.0f
+#define DIST_SERVO_EFFECTIVE_MAX_MM   2800.0f
 
 /* 测距变化速度的物理上限，超过这个斜率就先不让它进入伺服。 */
 #define DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S 2000.0f

@@ -166,7 +166,7 @@ void ResetDistanceAndChassisMotors(void)
 void CloseClawAndAdvance(uint16_t next_stage)
 {
     Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
-    osDelay(800);
+    osDelay(1300);
     stage_flag = next_stage;
 }
 
@@ -350,7 +350,7 @@ void HandleStage900_ThirdBeanPickup(void)
     Claw_degree_set(last_target->claw_angle, CLAW_UP);
     SetApproachTarget(last_target);
 
-    if (IsDistanceAndChassisReady(10.0f, 1.0f)) {
+    if (IsDistanceAndChassisReady(5.0f, 1.0f)) {
         stage_flag = 910;
     }
 }

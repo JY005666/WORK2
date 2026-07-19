@@ -9,7 +9,7 @@
 #define CLAW_HALF_OPEN 90
 #define CLAW_CLOSE 50
 
-#define SAFE_DIST_FOR_BOX_FINAL_TURN_MM  1200.0f
+#define SAFE_DIST_FOR_BOX_FINAL_TURN_MM  1000.0f
 #define FIRST_BEAN_LEFT_SAFE_CCW_DEG     (-80.0f)
 #define FIRST_BEAN_RIGHT_SAFE_CW_DEG     (60.0f)
 #define SECOND_BEAN_FINAL_TURN_MM        1500.0f
@@ -20,8 +20,8 @@
 #define LEFT_BEAN_DELIVERY_LIFT_READY_DEG      (-400.0f)
 #define RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG    (-680.0f)
 #define RIGHT_BEAN_DELIVERY_LIFT_READY_DEG     (-650.0f)
-#define MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG   (-650.0f)
-#define MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG    (-500.0f)
+#define MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG   (-680.0f)
+#define MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG    (-650.0f)
 
 uint8_t ApplyDeliveryLiftGate(BeanPosition bean_position);
 void SetApproachTarget(const Angle *target);
