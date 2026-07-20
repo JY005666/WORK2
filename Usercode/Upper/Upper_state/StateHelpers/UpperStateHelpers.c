@@ -63,6 +63,8 @@ static void FinishBeanPlacement(Bean *b, uint16_t next_stage)
 
     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
     osDelay(500);
+    /* 放豆完成后下一阶段通常会切到新的接近/抓取轨迹，这里清掉底盘和云台的规划残留，避免上一段送箱状态带入下一段。 */
+    ResetDistanceAndChassisMotors();
     stage_flag = next_stage;
 }
 
@@ -394,10 +396,12 @@ void HandleStage30_FirstBeanPlacement(void)
     /* 先完成底盘与云台对位，再执行放置动作。 */
     if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
         (abs(lidar.distance_aver - par.target_distance) < 8.0f)) {
-        par.degree_claw = -300.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -310.0f) {
+        par.degree_claw = -280.0f;
+        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -290.0f) {
             Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
             osDelay(500);
+            /* 第一颗豆子放完后会立刻切到第二颗豆子的接近轨迹，先清掉底盘和云台的规划残留，避免上一段送箱状态带入下一段。 */
+            ResetDistanceAndChassisMotors();
             /*
              * 第一个豆子放完后的下一目标，不再看它原本是“中间豆”，
              * 而是看它被放到了左半边还是非左半边：
