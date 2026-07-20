@@ -23,15 +23,14 @@ Angle box_right_1;
 Angle box_right_2;
 float box_middle_0_chassis_cw;
 float box_middle_0_chassis_ccw;
-ActiveBeanState g_active_bean_state = ACTIVE_NONE;
-BoxPosition g_last_placed_box_position = MIDDLE_0;
+BeanPosition g_second_bean_position = MIDDLE;
 BeanPosition g_third_bean_position = MIDDLE;
-uint8_t g_delivery_distance_enabled = 0U;
-uint8_t g_delivery_final_turn_enabled = 0U;
+
 
 static void HandleStage0(void);
 static void HandleStage10(void);
-static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage);
+static void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage);
+
 
 void Angle_Init(void);
 
@@ -52,42 +51,118 @@ void Upper_State_Task(void *arg)
                 HandleStage10(); //抓取第一个豆子
                 break;
             case 20:  //上升爪子到打不到箱子
-                if (ApplyDeliveryLiftGate(MIDDLE)) {
+                par.degree_claw = MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG;
+                if (hDJI[3].AxisData.AxisAngle_inDegree < MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG) {
                     stage_flag = 30;
-                } 
+                }; 
                 break;
             case 30:
                 HandleStage30_FirstBeanPlacement(); //放置第一个豆子
                 break;
             case 31:
-                HandleStage31_SecondBeanPickup(); //到达第二个豆子抓取位置
+                HandleStage31_SecondBeanPickup(); //判断第二个豆子是哪个,并到达抓取位置
                 break;
-            case 50:
-                HandleBeanGrabFinishAndAdvance(60); //抓取第二个豆子
+            case 40:
+                if (IsDistanceAndChassisReady(8.0f, 1.5f)) { //判断是否到达第二个豆子抓取位置
+                    stage_flag = 50;
+                }
                 break;
-            case 60:
-                HandleActiveBeanDelivery(70, 110); //第二个豆子的送箱与障碍规避
+            case 50: //下降夹爪并夹取
+                if (g_second_bean_position == LEFT) {
+                    par.degree_claw = -130.0f;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree > -140.0f) {
+                        CloseClawAndAdvance(60);
+                    }; 
+                }
+                if (g_second_bean_position == RIGHT) {
+                    par.degree_claw = -190.0f;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree  > -200.0f) {
+                        CloseClawAndAdvance(60);
+                    }
+                }
                 break;
-            case 70:
-                Bean_Place_Switch(&bean[1], 900); //左豆子
+            case 60: //将爪子上升到安全高度，避免送箱过程中碰到障碍物
+                if (g_second_bean_position == LEFT) {
+                    par.degree_claw = LEFT_BEAN_DELIVERY_LIFT_TARGET_DEG;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree < LEFT_BEAN_DELIVERY_LIFT_READY_DEG) {
+                        stage_flag = 61;
+                    }; 
+                }
+                if (g_second_bean_position == RIGHT) {
+                    par.degree_claw = RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree < RIGHT_BEAN_DELIVERY_LIFT_READY_DEG) {
+                        stage_flag = 61;
+                    }
+                }
                 break;
-            case 110:
-                Bean_Place_Switch(&bean[0], 900); //右豆子
+            case 61: //避障与设计送箱目标值
+                HandleBeanDelivery(g_second_bean_position, 70);
                 break;
-            case 900:
-                HandleStage900_ThirdBeanPickup(); //到达第三个豆子抓取位置
+            case 70: //放下第二个豆子
+                par.degree_claw = -280.0f;
+                if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -290.0f) {
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(500);
+                    ResetDistanceAndChassisMotors();
+                    stage_flag = 900;
+                }
                 break;
-            case 910:
-                HandleBeanGrabFinishAndAdvance(920); //抓取第三个豆子
+            case 900: //到达第三个豆子抓取位置
+                par.degree_claw = -600.0f;
+                Claw_degree_set(CLAW_OPEN, CLAW_DOWN);
+                if(g_third_bean_position == RIGHT){
+                    par.degree_chassis = bean_right.chassis;
+                    par.target_distance = bean_right.distance;
+                    Claw_degree_set(bean_right.claw_angle, CLAW_UP);
+                }
+                else if(g_third_bean_position == LEFT){
+                    par.degree_chassis = bean_left.chassis;
+                    par.target_distance = bean_left.distance;
+                    Claw_degree_set(bean_left.claw_angle, CLAW_UP);
+                }
+                if (IsDistanceAndChassisReady(8.0f, 1.5f)) { //判断是否到达第三个豆子抓取位置
+                    stage_flag = 910;
+                }
+                break;
+            case 910: // 下降夹爪并夹取第三个豆子
+                if (g_third_bean_position == LEFT) {
+                    par.degree_claw = -130.0f;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree > -140.0f) {
+                        CloseClawAndAdvance(911);
+                    }; 
+                }
+                if (g_third_bean_position == RIGHT) {
+                    par.degree_claw = -190.0f;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree  > -200.0f) {
+                        CloseClawAndAdvance(911);
+                    }
+                }
+                break;
+            case 911: //将爪子上升到安全高度，避免送箱过程中碰到障碍物
+                if (g_third_bean_position == LEFT) {
+                    par.degree_claw = LEFT_BEAN_DELIVERY_LIFT_TARGET_DEG;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree < LEFT_BEAN_DELIVERY_LIFT_READY_DEG) {
+                        stage_flag = 920;
+                    }; 
+                }
+                if (g_third_bean_position == RIGHT) {
+                    par.degree_claw = RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree < RIGHT_BEAN_DELIVERY_LIFT_READY_DEG) {
+                        stage_flag = 920;
+                    }
+                }
                 break;
             case 920:
-                HandleActiveBeanDelivery(930, 940); //第三个豆子的送箱与障碍规避
+                HandleBeanDelivery(g_third_bean_position, 930);
                 break;
             case 930:
-                Bean_Place_Switch(&bean[1], 1000);
-                break;
-            case 940:
-                Bean_Place_Switch(&bean[0], 1000);
+                par.degree_claw = -280.0f;
+                if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -290.0f) {
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(500);
+                    ResetDistanceAndChassisMotors();
+                    stage_flag = 1000;
+                }
                 break;
             default:
                 break;
@@ -137,30 +212,10 @@ static void HandleStage10(void)
         stage_flag = 20;
     }
 }
-static void HandleBeanGrabFinishAndAdvance(uint16_t next_stage)
-{
-    if (g_active_bean_state == ACTIVE_BEAN_LEFT) {
-        par.degree_claw = -130.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -140.0f) {
-            g_delivery_distance_enabled = 0U;
-            g_delivery_final_turn_enabled = 0U;
-            CloseClawAndAdvance(next_stage);
-        }
-        return;
-    }
 
-    if (g_active_bean_state == ACTIVE_BEAN_RIGHT) {
-        par.degree_claw = -190.0f;
-        if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -200.0f) {
-            g_delivery_distance_enabled = 0U;
-            g_delivery_final_turn_enabled = 0U;
-            CloseClawAndAdvance(next_stage);
-        }
-    }
-}
 void Angle_Init(void)
 {
-    bean_left.distance = 295.0f;
+    bean_left.distance = 290.0f;
     bean_left.chassis = -95.0f;
     bean_left.claw_angle = 115;
 
@@ -168,21 +223,21 @@ void Angle_Init(void)
     bean_right.chassis = 90.0f;
     bean_right.claw_angle = 53;
 
-    bean_middle.distance = 687.0f;
+    bean_middle.distance = 697.0f;
     bean_middle.chassis = -1.0f;
     bean_middle.claw_angle = 85;
 
     box_left_2.distance = 2500.0f;
-    box_left_2.chassis = 345.0f;
+    box_left_2.chassis = 355.0f;
     box_left_2.claw_angle = 58;
 
     box_left_1.distance = 2273.0f;
-    box_left_1.chassis = 461.0f;
+    box_left_1.chassis = 467.0f;
     box_left_1.claw_angle = 105;
 
     box_middle_0.distance = 2180.0f;
-    box_middle_0_chassis_cw = 537.0f;
-    box_middle_0_chassis_ccw = -548.0f;
+    box_middle_0_chassis_cw = 543.0f;
+    box_middle_0_chassis_ccw = -538.0f;
     box_middle_0.claw_angle = 85;
 
     box_right_1.distance = 2275.0f;
@@ -190,7 +245,7 @@ void Angle_Init(void)
     box_right_1.claw_angle = 60;
 
     box_right_2.distance = 2495.0f;
-    box_right_2.chassis = -354.0f;
+    box_right_2.chassis = -345.0f;
     box_right_2.claw_angle = 112;
 }
 
@@ -200,9 +255,9 @@ void Bean_Init(void)
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
 
-    bean[0].target_position = MIDDLE_0;
-    bean[1].target_position = RIGHT_2;
-    bean[2].target_position = LEFT_2;
+    bean[0].target_position = RIGHT_1;
+    bean[1].target_position = MIDDLE_0;
+    bean[2].target_position = LEFT_1;
 }
 
 void Bean_Target_Set(void)
@@ -223,4 +278,80 @@ void init_paramater(paramater *par)
     par->target_distance = lidar.distance_aver;
     par->degree_chassis = 0.0f;
     par->degree_claw = 0.0f;
+}
+void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
+    if(bean_position == LEFT){ //左边豆子
+        switch (bean[1].target_position) {
+            case LEFT_2: par.target_distance = box_left_2.distance; Claw_degree_set(box_left_2.claw_angle, CLAW_UP); break;
+            case LEFT_1: par.target_distance = box_left_1.distance; Claw_degree_set(box_left_1.claw_angle, CLAW_UP); break;
+            case MIDDLE_0: par.target_distance = box_middle_0.distance; Claw_degree_set(box_middle_0.claw_angle, CLAW_UP); break;
+            case RIGHT_1: par.target_distance = box_right_1.distance; Claw_degree_set(box_right_1.claw_angle, CLAW_UP); break;
+            case RIGHT_2: par.target_distance = box_right_2.distance; Claw_degree_set(box_right_2.claw_angle, CLAW_UP); break;
+        }
+        if(bean[1].target_position == LEFT_2||bean[1].target_position == LEFT_1||bean[1].target_position == MIDDLE_0){
+            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+                //设置云台目标角度
+                switch (bean[1].target_position) {
+                    case LEFT_2: par.degree_chassis = box_left_2.chassis; break;
+                    case LEFT_1: par.degree_chassis = box_left_1.chassis; break;
+                    case MIDDLE_0: par.degree_chassis = box_middle_0_chassis_cw; break;
+                    case RIGHT_1: par.degree_chassis = box_right_1.chassis; break;
+                    case RIGHT_2: par.degree_chassis = box_right_2.chassis; break;
+                }
+            }
+        }
+        else{ 
+            if(lidar.distance_aver < SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+                par.degree_chassis = FIRST_BEAN_RIGHT_SAFE_CW_DEG ;
+            } else
+            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+                switch (bean[1].target_position) {
+                    case LEFT_2: par.degree_chassis = box_left_2.chassis; break;
+                    case LEFT_1: par.degree_chassis = box_left_1.chassis; break;
+                    case MIDDLE_0: par.degree_chassis = box_middle_0_chassis_cw; break;
+                    case RIGHT_1: par.degree_chassis = box_right_1.chassis; break;
+                    case RIGHT_2: par.degree_chassis = box_right_2.chassis; break;
+                }
+                }
+            }
+    }else //右边豆子
+    if(bean_position == RIGHT){
+        switch (bean[0].target_position) {
+            case LEFT_2: par.target_distance = box_left_2.distance; Claw_degree_set(box_left_2.claw_angle, CLAW_UP); break;
+            case LEFT_1: par.target_distance = box_left_1.distance; Claw_degree_set(box_left_1.claw_angle, CLAW_UP); break;
+            case MIDDLE_0: par.target_distance = box_middle_0.distance; Claw_degree_set(box_middle_0.claw_angle, CLAW_UP); break;
+            case RIGHT_1: par.target_distance = box_right_1.distance; Claw_degree_set(box_right_1.claw_angle, CLAW_UP); break;
+            case RIGHT_2: par.target_distance = box_right_2.distance; Claw_degree_set(box_right_2.claw_angle, CLAW_UP); break;
+        }
+        if(bean[0].target_position == RIGHT_2||bean[0].target_position == RIGHT_1||bean[0].target_position == MIDDLE_0){
+            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+
+                switch (bean[0].target_position) {
+                    case RIGHT_1: par.degree_chassis = box_right_1.chassis; break;
+                    case RIGHT_2: par.degree_chassis = box_right_2.chassis; break;
+                    case MIDDLE_0: par.degree_chassis = box_middle_0_chassis_ccw; break;
+                    case LEFT_1: par.degree_chassis = box_left_1.chassis; break;
+                    case LEFT_2: par.degree_chassis = box_left_2.chassis; break;
+                }
+
+            }
+        }
+        else{
+            if(lidar.distance_aver < SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+                par.degree_chassis = FIRST_BEAN_LEFT_SAFE_CCW_DEG ;
+            } else
+            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+                switch (bean[0].target_position) {
+                    case RIGHT_1: par.degree_chassis = box_right_1.chassis; break;
+                    case RIGHT_2: par.degree_chassis = box_right_2.chassis; break;
+                    case MIDDLE_0: par.degree_chassis = box_middle_0_chassis_ccw; break;
+                    case LEFT_1: par.degree_chassis = box_left_1.chassis; break;
+                    case LEFT_2: par.degree_chassis = box_left_2.chassis; break;
+                }
+            }
+        }
+    }
+    if(IsDistanceAndChassisReady(8.0f, 8.0f)){
+        stage_flag = next_stage;
+    }
 }
