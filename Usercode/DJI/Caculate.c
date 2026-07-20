@@ -80,6 +80,7 @@ typedef struct {
 
 static DistanceServoPlanner_t distance_planner = {0};
 static float s_distance_last_valid_distance = 0.0f;
+static uint32_t s_distance_last_valid_tick = 0U;
 static float s_distance_jump_candidate_distance = 0.0f;
 static uint8_t s_distance_last_valid_ready = 0U;
 static uint8_t s_distance_jump_candidate_valid = 0U;
@@ -168,6 +169,7 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     float max_allowed_delta = 0.0f;
     uint32_t candidate_elapsed_ms = 0U;
     float candidate_elapsed_s = 0.0f;
+    uint32_t hold_ms = 0U;
 
     if (reliable_distance == NULL) {
         return 0U;
@@ -175,6 +177,10 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
 
     if (!Float_Is_Usable(raw_distance)) {
         if (s_distance_last_valid_ready) {
+            hold_ms = now_tick - s_distance_last_valid_tick;
+            if (hold_ms > DIST_SERVO_INVALID_HOLD_MS) {
+                return 0U;
+            }
             *reliable_distance = s_distance_last_valid_distance;
             return 1U;
         }
@@ -201,6 +207,9 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
         s_distance_last_raw_tick = now_tick;
         s_distance_last_raw_ready = 1U;
     } else {
+        if ((now_tick - s_distance_last_raw_tick) > DIST_SERVO_RAW_STALE_MS) {
+            return 0U;
+        }
         /*
          * 如果重复输出的是同一个“跳变候选值”，不能直接返回，
          * 否则候选值永远无法按时间累计到“物理上合理”。
@@ -222,6 +231,10 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
 
     if (raw_distance < DIST_SERVO_EFFECTIVE_MIN_MM || raw_distance > DIST_SERVO_EFFECTIVE_MAX_MM) {
         if (s_distance_last_valid_ready) {
+            hold_ms = now_tick - s_distance_last_valid_tick;
+            if (hold_ms > DIST_SERVO_INVALID_HOLD_MS) {
+                return 0U;
+            }
             *reliable_distance = s_distance_last_valid_distance;
             return 1U;
         }
@@ -230,6 +243,7 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
 
     if (!s_distance_last_valid_ready) {
         s_distance_last_valid_distance = raw_distance;
+        s_distance_last_valid_tick = now_tick;
         s_distance_last_valid_ready = 1U;
         s_distance_jump_candidate_valid = 0U;
         *reliable_distance = raw_distance;
@@ -239,6 +253,7 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     max_allowed_delta = DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S * sample_dt_s;
     if (fabsf(raw_distance - s_distance_last_valid_distance) <= max_allowed_delta) {
         s_distance_last_valid_distance = raw_distance;
+        s_distance_last_valid_tick = now_tick;
         s_distance_jump_candidate_valid = 0U;
         *reliable_distance = raw_distance;
         return 1U;
@@ -262,6 +277,7 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     max_allowed_delta = DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S * candidate_elapsed_s;
     if (fabsf(raw_distance - s_distance_last_valid_distance) <= max_allowed_delta) {
         s_distance_last_valid_distance = raw_distance;
+        s_distance_last_valid_tick = now_tick;
         s_distance_jump_candidate_valid = 0U;
         *reliable_distance = raw_distance;
         return 1U;
@@ -291,6 +307,7 @@ void DistanceServo_Reset(DJI_t *motor)
     if (motor == NULL || distance_planner.motor == motor) {
         memset(&distance_planner, 0, sizeof(distance_planner));
         s_distance_last_valid_distance = 0.0f;
+        s_distance_last_valid_tick = 0U;
         s_distance_jump_candidate_distance = 0.0f;
         s_distance_last_valid_ready = 0U;
         s_distance_jump_candidate_valid = 0U;
@@ -330,6 +347,7 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
         distance_planner.filtered_distance = current_distance;
 
         s_distance_last_valid_distance = current_distance;
+        s_distance_last_valid_tick = now_tick;
         s_distance_last_valid_ready =
             (uint8_t)(Distance_Is_Valid(current_distance) &&
                       current_distance >= DIST_SERVO_EFFECTIVE_MIN_MM &&

@@ -44,6 +44,8 @@
 
 /* 斜率判定用的最大采样间隔上限，防止长时间停更后一次放太大。 */
 #define DIST_SERVO_MAX_SAMPLE_DT_S    0.20f
+#define DIST_SERVO_INVALID_HOLD_MS    120U
+#define DIST_SERVO_RAW_STALE_MS       120U
 
 extern uint16_t distance_offset;
 
