@@ -200,8 +200,8 @@ void Bean_Init(void)
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
 
-    bean[0].target_position = LEFT_2;
-    bean[1].target_position = RIGHT_2;
+    bean[0].target_position = LEFT_1;
+    bean[1].target_position = RIGHT_1;
     bean[2].target_position = MIDDLE_0;
 }
 
