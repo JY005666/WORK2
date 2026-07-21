@@ -44,6 +44,9 @@
 /* 大跳变出现后，后续样本若仍接近这个候选值，就继续累计观察。 */
 #define DIST_SERVO_CANDIDATE_MATCH_MM 80.0f
 
+/* 候选跳变若连续同方向推进，且单步变化不离谱，也允许沿用原候选的起始时间继续累计。 */
+#define DIST_SERVO_CONTINUOUS_CANDIDATE_STEP_MM 300.0f
+
 /* 斜率判定用的最大采样间隔上限，防止长时间停更后一次放太大。 */
 #define DIST_SERVO_MAX_SAMPLE_DT_S    0.20f
 #define DIST_SERVO_INVALID_HOLD_MS    120U

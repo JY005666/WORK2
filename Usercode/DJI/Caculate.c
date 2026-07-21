@@ -172,6 +172,11 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     uint32_t candidate_elapsed_ms = 0U;
     float candidate_elapsed_s = 0.0f;
     uint32_t hold_ms = 0U;
+    float prev_raw_distance = s_distance_last_raw_distance;
+    uint8_t prev_raw_ready = s_distance_last_raw_ready;
+    float candidate_direction = 0.0f;
+    float raw_direction = 0.0f;
+    float raw_step = 0.0f;
 
     if (reliable_distance == NULL) {
         return 0U;
@@ -261,13 +266,33 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
         return 1U;
     }
 
-    if (!s_distance_jump_candidate_valid ||
-        fabsf(raw_distance - s_distance_jump_candidate_distance) > DIST_SERVO_CANDIDATE_MATCH_MM) {
+    if (!s_distance_jump_candidate_valid) {
         s_distance_jump_candidate_distance = raw_distance;
         s_distance_jump_candidate_tick = now_tick;
         s_distance_jump_candidate_valid = 1U;
         *reliable_distance = s_distance_last_valid_distance;
         return 1U;
+    }
+
+    if (fabsf(raw_distance - s_distance_jump_candidate_distance) > DIST_SERVO_CANDIDATE_MATCH_MM) {
+        candidate_direction = Sign_Float(s_distance_jump_candidate_distance - s_distance_last_valid_distance);
+        raw_direction = Sign_Float(raw_distance - s_distance_last_valid_distance);
+        raw_step = prev_raw_ready ? fabsf(raw_distance - prev_raw_distance) : 0.0f;
+
+        if (candidate_direction == 0.0f ||
+            raw_direction != candidate_direction ||
+            (prev_raw_ready && raw_step > DIST_SERVO_CONTINUOUS_CANDIDATE_STEP_MM)) {
+            s_distance_jump_candidate_distance = raw_distance;
+            s_distance_jump_candidate_tick = now_tick;
+            *reliable_distance = s_distance_last_valid_distance;
+            return 1U;
+        }
+
+        /*
+         * 连续同方向快速接近时，不要因为每一步都超出 match 窗口就反复重置候选。
+         * 这里更新候选距离，但保留原始 candidate_tick，让累计时间继续增长。
+         */
+        s_distance_jump_candidate_distance = raw_distance;
     }
 
     candidate_elapsed_ms = now_tick - s_distance_jump_candidate_tick;
