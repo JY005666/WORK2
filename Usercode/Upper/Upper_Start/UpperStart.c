@@ -37,8 +37,9 @@ void StartDefaultTask(void *argument){
     // Upper_Claw_Start();//好像没必要。。。
 
     for(;;){
+        DebugPrint();
         // printf("%f %f %f\r\n", lidar.distance_aver, hDJI[0].FdbData.rpm, hDJI[1].FdbData.rpm);
-        printf("stage_flag:%d, lidar:%d, chassis:%f, claw:%f\r\n", stage_flag, (int)lidar.distance_aver, hDJI[2].AxisData.AxisAngle_inDegree, hDJI[3].AxisData.AxisAngle_inDegree);
+        // printf("stage_flag:%d, lidar:%d, chassis:%f, claw:%f\r\n", stage_flag, (int)lidar.distance_aver, hDJI[2].AxisData.AxisAngle_inDegree, hDJI[3].AxisData.AxisAngle_inDegree);
         osDelay(50);
     }
 }

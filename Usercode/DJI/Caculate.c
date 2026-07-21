@@ -1,4 +1,4 @@
-#include "Caculate.h"
+﻿#include "Caculate.h"
 
 #include "math.h"
 #include "stdint.h"
@@ -80,6 +80,7 @@ typedef struct {
 } DistanceServoPlanner_t;
 
 static DistanceServoPlanner_t distance_planner = {0};
+DistanceServoDebug_t g_distance_servo_debug = {0};
 static float s_distance_last_valid_distance = 0.0f;
 static uint32_t s_distance_last_valid_tick = 0U;
 static float s_distance_jump_candidate_distance = 0.0f;
@@ -307,6 +308,7 @@ void DistanceServo_Reset(DJI_t *motor)
 {
     if (motor == NULL || distance_planner.motor == motor) {
         memset(&distance_planner, 0, sizeof(distance_planner));
+        memset(&g_distance_servo_debug, 0, sizeof(g_distance_servo_debug));
         s_distance_last_valid_distance = 0.0f;
         s_distance_last_valid_tick = 0U;
         s_distance_jump_candidate_distance = 0.0f;
@@ -331,6 +333,9 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
     uint32_t now_tick = 0U;
     float dt = 0.0f;
     float desired_speed_ref = 0.0f;
+    float reliable_distance_debug = current_distance;
+    float filtered_distance_debug = current_distance;
+    float control_distance_debug = current_distance;
 
     if (motor == NULL) return 0.0f;
 
@@ -404,6 +409,9 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
 
         error = target_distance - control_distance;
         abs_error = fabsf(error);
+        reliable_distance_debug = reliable_distance;
+        filtered_distance_debug = filtered_distance;
+        control_distance_debug = control_distance;
 
         if (distance_planner.arrived) {
             effective_tol = DIST_SERVO_POS_TOL_MM * 1.5f;
@@ -480,6 +488,17 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
     if (fabsf(distance_planner.last_speed_ref) < 1.0f && desired_speed_ref == 0.0f) {
         distance_planner.last_speed_ref = 0.0f;
     }
+
+    g_distance_servo_debug.target_distance = target_distance;
+    g_distance_servo_debug.raw_distance = current_distance;
+    g_distance_servo_debug.reliable_distance = reliable_distance_debug;
+    g_distance_servo_debug.filtered_distance = filtered_distance_debug;
+    g_distance_servo_debug.control_distance = control_distance_debug;
+    g_distance_servo_debug.desired_speed_ref = distance_planner.last_speed_ref;
+    g_distance_servo_debug.motor_rpm = motor->FdbData.rpm;
+    g_distance_servo_debug.use_reliable_near_target = distance_planner.use_reliable_near_target;
+    g_distance_servo_debug.arrived = distance_planner.arrived;
+    g_distance_servo_debug.arrived_confirmed = distance_planner.arrived_confirmed;
 
     distance_planner.last_tick = now_tick;
     return distance_planner.last_speed_ref;

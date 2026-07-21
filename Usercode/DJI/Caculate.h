@@ -51,6 +51,21 @@
 
 extern uint16_t distance_offset;
 
+typedef struct {
+    float target_distance;
+    float raw_distance;
+    float reliable_distance;
+    float filtered_distance;
+    float control_distance;
+    float desired_speed_ref;
+    float motor_rpm;
+    uint8_t use_reliable_near_target;
+    uint8_t arrived;
+    uint8_t arrived_confirmed;
+} DistanceServoDebug_t;
+
+extern DistanceServoDebug_t g_distance_servo_debug;
+
 #define YAW_MAX_SPEED_DEG_PER_S       1220.0f
 #define YAW_ACCEL_DEG_PER_S2          950.0f
 #define YAW_POS_TOL_DEG               1.0f
@@ -90,5 +105,6 @@ void pr(void);
 void clear(void);
 void Motor_State_Reset(DJI_t *motor);
 void Reset_DJI_Motor_Full(DJI_t *ptr);
+void DebugPrint(void);
 
 #endif

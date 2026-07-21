@@ -70,6 +70,7 @@ void Angle_Init(void);
 void Bean_Init(void);
 void Bean_Target_Set(void);
 void init_paramater(paramater *par);
+void DebugPrint(void);
 
 void Upper_State_Start(void);
 

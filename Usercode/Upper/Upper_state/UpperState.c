@@ -175,12 +175,13 @@ void Upper_State_Task(void *arg)
     }
 }
 
-static void DebugPrintUpperState(void)
+void DebugPrint(void)
 {
     static uint32_t s_last_print_tick = 0U;
     static uint16_t s_last_stage = 0xFFFFU;
     static float s_last_target_distance = 0.0f;
     static float s_last_target_chassis = 0.0f;
+    static float s_last_control_distance = 0.0f;
     uint32_t now_tick = HAL_GetTick();
     uint8_t should_print = 0U;
 
@@ -193,6 +194,10 @@ static void DebugPrintUpperState(void)
         should_print = 1U;
     }
 
+    if (fabsf(g_distance_servo_debug.control_distance - s_last_control_distance) > 5.0f) {
+        should_print = 1U;
+    }
+
     if ((now_tick - s_last_print_tick) >= 100U) {
         should_print = 1U;
     }
@@ -201,10 +206,18 @@ static void DebugPrintUpperState(void)
         return;
     }
 
-    printf("stage:%u,lidar:%d,target_distance:%.1f,target_chassis:%.1f,chassis:%.1f,claw:%.1f\r\n",
+    printf("stage:%u,target_distance:%.1f,lidar:%d,reliable:%.1f,filtered:%.1f,control:%.1f,speed_ref:%.1f,motor_rpm:%.1f,near:%u,arrived:%u,arrived_confirmed:%u,target_chassis:%.1f,chassis:%.1f,claw:%.1f\r\n",
            stage_flag,
-           (int)lidar.distance_aver,
-           par.target_distance,
+           g_distance_servo_debug.target_distance,
+           (int)g_distance_servo_debug.raw_distance,
+           g_distance_servo_debug.reliable_distance,
+           g_distance_servo_debug.filtered_distance,
+           g_distance_servo_debug.control_distance,
+           g_distance_servo_debug.desired_speed_ref,
+           g_distance_servo_debug.motor_rpm,
+           g_distance_servo_debug.use_reliable_near_target,
+           g_distance_servo_debug.arrived,
+           g_distance_servo_debug.arrived_confirmed,
            par.degree_chassis,
            hDJI[2].AxisData.AxisAngle_inDegree,
            hDJI[3].AxisData.AxisAngle_inDegree);
@@ -213,6 +226,7 @@ static void DebugPrintUpperState(void)
     s_last_stage = stage_flag;
     s_last_target_distance = par.target_distance;
     s_last_target_chassis = par.degree_chassis;
+    s_last_control_distance = g_distance_servo_debug.control_distance;
 }
 
 void Upper_State_Start(void)
@@ -227,7 +241,7 @@ void Upper_State_Start(void)
 static void HandleStage0(void)
 {
     par.degree_claw = -650.0f;
-    if(hDJI[3].AxisData.AxisAngle_inDegree<-15.0f){
+    if(hDJI[3].AxisData.AxisAngle_inDegree<-100.0f){
         if (lidar.distance_aver > 1000.0f) {
             par.degree_chassis = 50.0f;
             par.target_distance = bean_middle.distance;
@@ -271,7 +285,7 @@ void Angle_Init(void)
     bean_middle.claw_angle = 85;
 
     box_left_2.distance = 2500.0f;
-    box_left_2.chassis = 355.0f;
+    box_left_2.chassis = 345.0f;
     box_left_2.claw_angle = 58;
 
     box_left_1.distance = 2273.0f;
@@ -298,9 +312,9 @@ void Bean_Init(void)
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
 
-    bean[0].target_position = RIGHT_1;
+    bean[0].target_position = RIGHT_2;
     bean[1].target_position = MIDDLE_0;
-    bean[2].target_position = LEFT_1;
+    bean[2].target_position = LEFT_2;
 }
 
 void Bean_Target_Set(void)
