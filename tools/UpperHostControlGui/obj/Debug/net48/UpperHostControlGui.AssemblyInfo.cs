@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UpperHostControlGui")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ca2067968814bbbfdf5aa4b702d13fc4eefa8e84")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf801385b9830b633b2c55767d4fb836321884b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("UpperHostControlGui")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UpperHostControlGui")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

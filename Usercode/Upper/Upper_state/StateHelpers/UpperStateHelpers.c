@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+static uint8_t s_final_turn_locked = 0U;
+
 static uint8_t IsLeftSideBox(BoxPosition position)
 {
     return (uint8_t)((position == LEFT_2) || (position == LEFT_1));
@@ -19,12 +21,6 @@ static Angle *GetBoxAngleByPosition(BoxPosition position)
     }
 }
 
-
-
-
-
-
-
 static float GetFinalChassisForStage30(const Angle *target_box, BoxPosition position, uint8_t approached_from_left_side)
 {
     if (target_box == NULL) {
@@ -41,9 +37,6 @@ static float GetFinalChassisForStage30(const Angle *target_box, BoxPosition posi
 
     return box_middle_0_chassis_ccw;
 }
-
-
-
 
 uint8_t IsDistanceAndChassisReady(float distance_tol, float chassis_tol)
 {
@@ -76,11 +69,16 @@ void LiftAndRotateToPlacement(float lift_target, float lift_ready_threshold, flo
     }
 }
 
+void ResetStage30PlacementState(void)
+{
+    s_final_turn_locked = 0U;
+}
+
 /*
- * 第二颗豆的统一接近状态：
- * 放完第一个豆子后，夹爪上升，然后根据第一个豆子的目标箱子在左半边还是非左半边，
- * 直接给左豆或右豆对应的底盘距离和云台角度。
- * 当距离和云台都到位后，进入抓取状态。
+ * 绗簩棰楄眴鐨勭粺涓€鎺ヨ繎鐘舵€侊細
+ * 鏀惧畬绗竴涓眴瀛愬悗锛屽す鐖笂鍗囷紝鐒跺悗鏍规嵁绗竴涓眴瀛愮殑鐩爣绠卞瓙鍦ㄥ乏鍗婅竟杩樻槸闈炲乏鍗婅竟锛?
+ * 鐩存帴缁欏乏璞嗘垨鍙宠眴瀵瑰簲鐨勫簳鐩樿窛绂诲拰浜戝彴瑙掑害銆?
+ * 褰撹窛绂诲拰浜戝彴閮藉埌浣嶅悗锛岃繘鍏ユ姄鍙栫姸鎬併€?
  */
 void HandleStage31_SecondBeanPickup(void)
 {
@@ -111,33 +109,45 @@ void HandleStage30_FirstBeanPlacement(void)
 {
     Angle *target_box = GetBoxAngleByPosition(bean[2].target_position);
     uint8_t target_is_left_side = IsLeftSideBox(bean[2].target_position);
+    float final_chassis_target = 0.0f;
 
     if (target_box == NULL) {
+        s_final_turn_locked = 0U;
         return;
     }
 
     Claw_degree_set(target_box->claw_angle, CLAW_UP);
 
     par.target_distance = target_box->distance;
-    if (lidar.distance_aver <= SAFE_DIST_FOR_BOX_FINAL_TURN_MM){ //小于安全距离阈值
+    if (target_is_left_side) {
+        final_chassis_target = GetFinalChassisForStage30(target_box, bean[2].target_position, 1U);
+    } else {
+        final_chassis_target = GetFinalChassisForStage30(target_box, bean[2].target_position, 0U);
+    }
+
+    if (!s_final_turn_locked &&
+        lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM) {
+        s_final_turn_locked = 1U;
+    }
+
+    if (!s_final_turn_locked){ //
         if (target_is_left_side){par.degree_chassis = FIRST_BEAN_LEFT_SAFE_CCW_DEG;}
         else {par.degree_chassis = FIRST_BEAN_RIGHT_SAFE_CW_DEG;}
-    } else if (lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM) { //大于安全距离阈值
-        if (target_is_left_side) {par.degree_chassis = GetFinalChassisForStage30(target_box, bean[2].target_position, 1U);} 
-        else {par.degree_chassis =  GetFinalChassisForStage30(target_box, bean[2].target_position, 0U);}
+    } else { //
+        par.degree_chassis = final_chassis_target;
     }
-    /* 先完成底盘与云台对位，再执行放置动作。 */
-    if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+
+    if(s_final_turn_locked){
         if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
             (abs(lidar.distance_aver - par.target_distance) < 8.0f)) {
             par.degree_claw = -280.0f;
-            if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -290.0f) {
+            if (hDJI[3].AxisData.AxisAngle_inDegree  > -290.0f) {
                 Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                osDelay(500);
+                osDelay(1000);
                 ResetDistanceAndChassisMotors();
+                s_final_turn_locked = 0U;
                 stage_flag = 31;
             }
         }
     }
-
 }

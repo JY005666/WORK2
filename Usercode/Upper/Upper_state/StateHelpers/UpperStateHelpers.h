@@ -19,14 +19,15 @@
 #define LEFT_BEAN_DELIVERY_LIFT_TARGET_DEG     (-650.0f)
 #define LEFT_BEAN_DELIVERY_LIFT_READY_DEG      (-400.0f)
 #define RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG    (-680.0f)
-#define RIGHT_BEAN_DELIVERY_LIFT_READY_DEG     (-650.0f)
+#define RIGHT_BEAN_DELIVERY_LIFT_READY_DEG     (-520.0f)
 #define MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG   (-680.0f)
-#define MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG    (-650.0f)
+#define MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG    (-620.0f)
 
 uint8_t IsDistanceAndChassisReady(float distance_tol, float chassis_tol);
 void ResetDistanceAndChassisMotors(void);
 void CloseClawAndAdvance(uint16_t next_stage);
 void LiftAndRotateToPlacement(float lift_target, float lift_ready_threshold, float chassis_target, float chassis_tol, uint16_t next_stage);
+void ResetStage30PlacementState(void);
 void HandleStage30_FirstBeanPlacement(void);
 void HandleStage31_SecondBeanPickup(void);
 void HandleStage900_ThirdBeanPickup(void);

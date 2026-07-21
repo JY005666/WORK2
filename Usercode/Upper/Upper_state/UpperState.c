@@ -1,6 +1,7 @@
 ﻿#include "UpperState.h"
 #include "StateHelpers/UpperStateHelpers.h"
 
+#include "math.h"
 #include "stdio.h"
 #include "stdlib.h"
 
@@ -32,6 +33,7 @@ static void HandleStage10(void);
 static void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage);
 
 
+
 void Angle_Init(void);
 
 void Bean_Init(void);
@@ -53,6 +55,7 @@ void Upper_State_Task(void *arg)
             case 20:  //上升爪子到打不到箱子
                 par.degree_claw = MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG;
                 if (hDJI[3].AxisData.AxisAngle_inDegree < MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG) {
+                    ResetStage30PlacementState();
                     stage_flag = 30;
                 }; 
                 break;
@@ -69,8 +72,8 @@ void Upper_State_Task(void *arg)
                 break;
             case 50: //下降夹爪并夹取
                 if (g_second_bean_position == LEFT) {
-                    par.degree_claw = -130.0f;
-                    if (hDJI[3].AxisData.AxisAngle_inDegree > -140.0f) {
+                    par.degree_claw = -100.0f;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree > -110.0f) {
                         CloseClawAndAdvance(60);
                     }; 
                 }
@@ -100,9 +103,9 @@ void Upper_State_Task(void *arg)
                 break;
             case 70: //放下第二个豆子
                 par.degree_claw = -280.0f;
-                if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -290.0f) {
+                if (hDJI[3].AxisData.AxisAngle_inDegree  > -290.0f) {
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(500);
+                    osDelay(1000);
                     ResetDistanceAndChassisMotors();
                     stage_flag = 900;
                 }
@@ -126,8 +129,8 @@ void Upper_State_Task(void *arg)
                 break;
             case 910: // 下降夹爪并夹取第三个豆子
                 if (g_third_bean_position == LEFT) {
-                    par.degree_claw = -130.0f;
-                    if (hDJI[3].AxisData.AxisAngle_inDegree > -140.0f) {
+                    par.degree_claw = -100.0f;
+                    if (hDJI[3].AxisData.AxisAngle_inDegree > -110.0f) {
                         CloseClawAndAdvance(911);
                     }; 
                 }
@@ -157,9 +160,9 @@ void Upper_State_Task(void *arg)
                 break;
             case 930:
                 par.degree_claw = -280.0f;
-                if (hDJI[3].AxisData.AxisAngle_inDegree - par.degree_claw > -290.0f) {
+                if (hDJI[3].AxisData.AxisAngle_inDegree  > -290.0f) {
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(500);
+                    osDelay(1000);
                     ResetDistanceAndChassisMotors();
                     stage_flag = 1000;
                 }
@@ -170,6 +173,46 @@ void Upper_State_Task(void *arg)
 
         osDelay(2);
     }
+}
+
+static void DebugPrintUpperState(void)
+{
+    static uint32_t s_last_print_tick = 0U;
+    static uint16_t s_last_stage = 0xFFFFU;
+    static float s_last_target_distance = 0.0f;
+    static float s_last_target_chassis = 0.0f;
+    uint32_t now_tick = HAL_GetTick();
+    uint8_t should_print = 0U;
+
+    if (stage_flag != s_last_stage) {
+        should_print = 1U;
+    }
+
+    if (fabsf(par.target_distance - s_last_target_distance) > 2.0f ||
+        fabsf(par.degree_chassis - s_last_target_chassis) > 1.0f) {
+        should_print = 1U;
+    }
+
+    if ((now_tick - s_last_print_tick) >= 100U) {
+        should_print = 1U;
+    }
+
+    if (!should_print) {
+        return;
+    }
+
+    printf("stage:%u,lidar:%d,target_distance:%.1f,target_chassis:%.1f,chassis:%.1f,claw:%.1f\r\n",
+           stage_flag,
+           (int)lidar.distance_aver,
+           par.target_distance,
+           par.degree_chassis,
+           hDJI[2].AxisData.AxisAngle_inDegree,
+           hDJI[3].AxisData.AxisAngle_inDegree);
+
+    s_last_print_tick = now_tick;
+    s_last_stage = stage_flag;
+    s_last_target_distance = par.target_distance;
+    s_last_target_chassis = par.degree_chassis;
 }
 
 void Upper_State_Start(void)
@@ -204,8 +247,8 @@ static void HandleStage0(void)
 }
 static void HandleStage10(void)
 {
-    par.degree_claw = -325.0f;
-    if (hDJI[3].AxisData.AxisAngle_inDegree > -335.0f) {
+    par.degree_claw = -295.0f;
+    if (hDJI[3].AxisData.AxisAngle_inDegree > -310.0f) {
         Claw_degree_set(CLAW_CLOSE, CLAW_DOWN);
         osDelay(500);
         ResetDistanceAndChassisMotors();
@@ -215,16 +258,16 @@ static void HandleStage10(void)
 
 void Angle_Init(void)
 {
-    bean_left.distance = 290.0f;
+    bean_left.distance = 280.0f;
     bean_left.chassis = -95.0f;
     bean_left.claw_angle = 115;
 
     bean_right.distance = 295.0f;
-    bean_right.chassis = 90.0f;
+    bean_right.chassis = 87.0f;
     bean_right.claw_angle = 53;
 
     bean_middle.distance = 697.0f;
-    bean_middle.chassis = -1.0f;
+    bean_middle.chassis = 2.0f;
     bean_middle.claw_angle = 85;
 
     box_left_2.distance = 2500.0f;
@@ -235,7 +278,7 @@ void Angle_Init(void)
     box_left_1.chassis = 467.0f;
     box_left_1.claw_angle = 105;
 
-    box_middle_0.distance = 2180.0f;
+    box_middle_0.distance = 2200.0f;
     box_middle_0_chassis_cw = 543.0f;
     box_middle_0_chassis_ccw = -538.0f;
     box_middle_0.claw_angle = 85;

@@ -68,6 +68,7 @@ typedef struct {
     uint8_t initialized;
     uint8_t arrived;
     uint8_t arrived_confirmed;
+    uint8_t use_reliable_near_target;
     float target_distance;
     float last_speed_ref;
     float last_error;
@@ -364,6 +365,7 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
         distance_planner.target_distance = target_distance;
         distance_planner.arrived = 0U;
         distance_planner.arrived_confirmed = 0U;
+        distance_planner.use_reliable_near_target = 0U;
     }
 
     if (Float_Is_Usable(target_distance)) {
@@ -379,10 +381,29 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
             &distance_planner.filtered_distance,
             DIST_FILTER_ALPHA
         );
-        float error = target_distance - filtered_distance;
+        float reliable_error = target_distance - reliable_distance;
+        float control_distance = filtered_distance;
+        float error = 0.0f;
         float abs_error = fabsf(error);
         float effective_tol = DIST_SERVO_POS_TOL_MM;
         float stop_error = 0.0f;
+
+        if (distance_planner.use_reliable_near_target) {
+            if (fabsf(reliable_error) > DIST_SERVO_NEAR_SWITCH_OUT_MM) {
+                distance_planner.use_reliable_near_target = 0U;
+            }
+        } else {
+            if (fabsf(reliable_error) < DIST_SERVO_NEAR_SWITCH_IN_MM) {
+                distance_planner.use_reliable_near_target = 1U;
+            }
+        }
+
+        if (distance_planner.use_reliable_near_target) {
+            control_distance = reliable_distance;
+        }
+
+        error = target_distance - control_distance;
+        abs_error = fabsf(error);
 
         if (distance_planner.arrived) {
             effective_tol = DIST_SERVO_POS_TOL_MM * 1.5f;

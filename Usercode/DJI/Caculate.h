@@ -1,4 +1,4 @@
-#ifndef _CACULATE_H__
+﻿#ifndef _CACULATE_H__
 #define _CACULATE_H__
 
 #include "DJI.h"
@@ -21,6 +21,8 @@
 #define DIST_SERVO_MIN_MOVE_RPM       260.0f  //最小运动速度
 #define DIST_SERVO_APPROACH_SPEED_RPM 220.0f
 #define DIST_SERVO_HOLD_MAX_SPEED_RPM 120.0f
+#define DIST_SERVO_NEAR_SWITCH_IN_MM  750.0f
+#define DIST_SERVO_NEAR_SWITCH_OUT_MM 850.0f
 #define DIST_SERVO_ACCEL_RPM_PER_S    22000.0f
 #define DIST_SERVO_DECEL_RPM_PER_S    24000.0f
 #define DIST_SERVO_DEFAULT_DT_S       0.001f
