@@ -139,7 +139,7 @@ void HandleStage30_FirstBeanPlacement(void)
 
     if(s_final_turn_locked){
         if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-            (abs(lidar.distance_aver - par.target_distance) < 8.0f)) {
+            (abs(lidar.distance_aver - par.target_distance) < 10.0f)) {
             par.degree_claw = -280.0f;
             if (hDJI[3].AxisData.AxisAngle_inDegree  > -290.0f) {
                 Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
