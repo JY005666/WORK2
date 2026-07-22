@@ -105,7 +105,7 @@ void Upper_State_Task(void *arg)
                 par.degree_claw = -280.0f;
                 if (hDJI[3].AxisData.AxisAngle_inDegree  > -290.0f) {
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(1000);
+                    osDelay(800);
                     ResetDistanceAndChassisMotors();
                     stage_flag = 900;
                 }
@@ -162,7 +162,7 @@ void Upper_State_Task(void *arg)
                 par.degree_claw = -280.0f;
                 if (hDJI[3].AxisData.AxisAngle_inDegree  > -290.0f) {
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(1000);
+                    osDelay(800);
                     ResetDistanceAndChassisMotors();
                     stage_flag = 1000;
                 }
@@ -277,7 +277,7 @@ void Angle_Init(void)
     bean_left.claw_angle = 115;
 
     bean_right.distance = 285.0f;
-    bean_right.chassis = 88.0f;
+    bean_right.chassis = 89.0f;
     bean_right.claw_angle = 53;
 
     bean_middle.distance = 677.0f;
@@ -312,9 +312,9 @@ void Bean_Init(void)
     bean[1].position = LEFT;
     bean[2].position = MIDDLE;
 
-    bean[0].target_position = RIGHT_2;
-    bean[1].target_position = MIDDLE_0;
-    bean[2].target_position = LEFT_2;
+    bean[0].target_position = MIDDLE_0;
+    bean[1].target_position = RIGHT_2;
+    bean[2].target_position = RIGHT_1;
 }
 
 void Bean_Target_Set(void)
@@ -408,7 +408,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
             }
         }
     }
-    if(IsDistanceAndChassisReady(8.0f, 8.0f)){
+    if(IsDistanceAndChassisReady(10.0f, 8.0f)){
         stage_flag = next_stage;
     }
 }

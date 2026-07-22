@@ -143,7 +143,7 @@ void HandleStage30_FirstBeanPlacement(void)
             par.degree_claw = -280.0f;
             if (hDJI[3].AxisData.AxisAngle_inDegree  > -290.0f) {
                 Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                osDelay(1000);
+                osDelay(800);
                 ResetDistanceAndChassisMotors();
                 s_final_turn_locked = 0U;
                 stage_flag = 31;
