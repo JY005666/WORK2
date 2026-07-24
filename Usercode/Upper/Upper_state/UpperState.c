@@ -241,7 +241,7 @@ void Upper_State_Start(void)
 static void HandleStage0(void)
 {
     par.degree_claw = -650.0f;
-    if(hDJI[3].AxisData.AxisAngle_inDegree<-100.0f){
+    if(hDJI[3].AxisData.AxisAngle_inDegree<-50.0f){
         if (lidar.distance_aver > 1000.0f) {
             par.degree_chassis = 50.0f;
             par.target_distance = bean_middle.distance;
@@ -272,11 +272,11 @@ static void HandleStage10(void)
 
 void Angle_Init(void)
 {
-    bean_left.distance = 260.0f;
-    bean_left.chassis = -95.0f;
+    bean_left.distance = 230.0f;
+    bean_left.chassis = -99.0f;
     bean_left.claw_angle = 115;
 
-    bean_right.distance = 285.0f;
+    bean_right.distance = 230.0f;
     bean_right.chassis = 89.0f;
     bean_right.claw_angle = 53;
 
@@ -284,7 +284,7 @@ void Angle_Init(void)
     bean_middle.chassis = 2.0f;
     bean_middle.claw_angle = 85;
 
-    box_left_2.distance = 2480.0f;
+    box_left_2.distance = 2470.0f;
     box_left_2.chassis = 345.0f;
     box_left_2.claw_angle = 58;
 
@@ -292,16 +292,16 @@ void Angle_Init(void)
     box_left_1.chassis = 467.0f;
     box_left_1.claw_angle = 105;
 
-    box_middle_0.distance = 2180.0f;
+    box_middle_0.distance = 2160.0f;
     box_middle_0_chassis_cw = 543.0f;
     box_middle_0_chassis_ccw = -538.0f;
     box_middle_0.claw_angle = 85;
 
-    box_right_1.distance = 2255.0f;
+    box_right_1.distance = 2235.0f;
     box_right_1.chassis = -470.0f;
     box_right_1.claw_angle = 60;
 
-    box_right_2.distance = 2475.0f;
+    box_right_2.distance = 2455.0f;
     box_right_2.chassis = -345.0f;
     box_right_2.claw_angle = 112;
 }
