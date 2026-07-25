@@ -1,5 +1,6 @@
 #include "HostControl.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -70,6 +71,11 @@ static void HostControl_ZeroAxis(uint8_t axis)
 static void HostControl_SetAxis(uint8_t axis, float degree)
 {
     if (!HostControl_IsValidAxis(axis)) return;
+
+    if (axis == 3U && fabsf(g_host_control.target_deg[axis] - degree) > 0.5f) {
+        PID_Clear(&hDJI[3].posPID);
+        PID_Clear(&hDJI[3].speedPID);
+    }
 
     g_host_control.target_deg[axis] = degree;
     g_host_control.enabled[axis] = 1U;
