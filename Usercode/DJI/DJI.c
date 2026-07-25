@@ -35,7 +35,7 @@ void DJI_Init(){
 			else if(hDJI[i].motorType == M2006){
 					hDJI[i].reductionRate = 36.0f/1.0f;
 					hDJI[i].speedPID.KP = 12;
-					hDJI[i].speedPID.KI = 0.2f;      // 关积分，避免到位后积分累积导致晃动
+					hDJI[i].speedPID.KI = 0.2f;      
 					hDJI[i].speedPID.KD = 5;
 					hDJI[i].speedPID.outputMax = 10000;
 					// 距离伺服场景

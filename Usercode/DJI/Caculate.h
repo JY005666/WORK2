@@ -11,16 +11,16 @@
 #define DIST_OFFSET_SAMPLE_COUNT      5
 #define DIST_OFFSET_TIMEOUT_MS        200
 
-#define DIST_SERVO_POS_TOL_MM         5.0f
+#define DIST_SERVO_POS_TOL_MM         8.0f
 #define DIST_SERVO_RPM_TOL            60.0f
 #define DIST_SERVO_TARGET_CHANGE_TOL_MM 0.5f
 #define DIST_SERVO_MAX_SPEED_RPM      9500.0f
 #define DIST_SERVO_KP_RPM_PER_MM      34.0f
-#define DIST_SERVO_HOLD_KP_RPM_PER_MM 18.0f
+#define DIST_SERVO_HOLD_KP_RPM_PER_MM 12.0f
 #define DIST_SERVO_BRAKE_GAIN_RPM2_PER_MM 50000.0f
-#define DIST_SERVO_MIN_MOVE_RPM       360.0f  //最小运动速度
+#define DIST_SERVO_MIN_MOVE_RPM       140.0f  //最小运动速度
 #define DIST_SERVO_APPROACH_SPEED_RPM 220.0f
-#define DIST_SERVO_HOLD_MAX_SPEED_RPM 120.0f
+#define DIST_SERVO_HOLD_MAX_SPEED_RPM 80.0f
 #define DIST_SERVO_NEAR_SWITCH_IN_MM  750.0f
 #define DIST_SERVO_NEAR_SWITCH_OUT_MM 850.0f
 #define DIST_SERVO_ACCEL_RPM_PER_S    22000.0f
@@ -84,7 +84,7 @@ extern DistanceServoDebug_t g_distance_servo_debug;
 
 
 
-#define ARM_MAX_SPEED_DEG_PER_S       920.0f
+#define ARM_MAX_SPEED_DEG_PER_S       1620.0f
 #define ARM_ACCEL_DEG_PER_S2          1500.0f
 #define ARM_POS_TOL_DEG               1.0f
 

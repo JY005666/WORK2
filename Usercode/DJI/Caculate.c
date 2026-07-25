@@ -177,6 +177,8 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     float candidate_direction = 0.0f;
     float raw_direction = 0.0f;
     float raw_step = 0.0f;
+    float continuous_step_limit = DIST_SERVO_CONTINUOUS_CANDIDATE_STEP_MM;
+    uint8_t allow_small_reverse_jitter = 0U;
 
     if (reliable_distance == NULL) {
         return 0U;
@@ -258,6 +260,10 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     }
 
     max_allowed_delta = DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S * sample_dt_s;
+    if (raw_distance < s_distance_last_valid_distance) {
+        /* 由远到近时放宽一点接纳速度，避免 reliable 长时间卡在远处。 */
+        max_allowed_delta *= 1.6f;
+    }
     if (fabsf(raw_distance - s_distance_last_valid_distance) <= max_allowed_delta) {
         s_distance_last_valid_distance = raw_distance;
         s_distance_last_valid_tick = now_tick;
@@ -278,10 +284,23 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
         candidate_direction = Sign_Float(s_distance_jump_candidate_distance - s_distance_last_valid_distance);
         raw_direction = Sign_Float(raw_distance - s_distance_last_valid_distance);
         raw_step = prev_raw_ready ? fabsf(raw_distance - prev_raw_distance) : 0.0f;
+        if (candidate_direction < 0.0f) {
+            continuous_step_limit *= 1.5f;
+            /*
+             * 由远到近时，测距模块轻微晃动可能会让原始值短暂回摆一点点。
+             * 只要它仍然比 last_valid 更近，就不要立刻把整段候选重新计时。
+             */
+            if (raw_direction > 0.0f &&
+                raw_distance < s_distance_last_valid_distance &&
+                prev_raw_ready &&
+                raw_step <= (DIST_SERVO_CANDIDATE_MATCH_MM * 0.5f)) {
+                allow_small_reverse_jitter = 1U;
+            }
+        }
 
         if (candidate_direction == 0.0f ||
-            raw_direction != candidate_direction ||
-            (prev_raw_ready && raw_step > DIST_SERVO_CONTINUOUS_CANDIDATE_STEP_MM)) {
+            (!allow_small_reverse_jitter && raw_direction != candidate_direction) ||
+            (prev_raw_ready && raw_step > continuous_step_limit)) {
             s_distance_jump_candidate_distance = raw_distance;
             s_distance_jump_candidate_tick = now_tick;
             *reliable_distance = s_distance_last_valid_distance;
@@ -302,6 +321,9 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     }
 
     max_allowed_delta = DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S * candidate_elapsed_s;
+    if (raw_distance < s_distance_last_valid_distance) {
+        max_allowed_delta *= 1.6f;
+    }
     if (fabsf(raw_distance - s_distance_last_valid_distance) <= max_allowed_delta) {
         s_distance_last_valid_distance = raw_distance;
         s_distance_last_valid_tick = now_tick;
