@@ -81,6 +81,7 @@ extern DistanceServoDebug_t g_distance_servo_debug;
 #define YAW_MIN_MOVE_DEG_PER_S         16.0f   /* 起转最小速度，避免低速抖动不走 */
 #define YAW_BRAKE_GAIN_DEG_PER_S2      250.0f  /* 刹车距离估算用的等效减速度 */
 #define YAW_STABLE_MS                  120     /* 连续稳定这么久才判定到位 */
+#define YAW_HOLD_ZERO_TOL_DEG          0.4f    /* 到位附近小于该误差时直接停住，避免末端来回抖 */
 
 
 
@@ -109,5 +110,6 @@ void clear(void);
 void Motor_State_Reset(DJI_t *motor);
 void Reset_DJI_Motor_Full(DJI_t *ptr);
 void DebugPrint(void);
+void YawServo_ForceLockCurrent(DJI_t *motor);
 
 #endif

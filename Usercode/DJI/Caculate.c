@@ -201,7 +201,7 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
      * 小变化时认为还是同一帧数据，不重新计算“采样时间间隔”。
      */
     if (!s_distance_last_raw_ready ||
-        fabsf(raw_distance - s_distance_last_raw_distance) > DIST_SERVO_NEW_SAMPLE_EPS_MM) {
+        fabsf(raw_distance - s_distance_last_raw_distance) >= DIST_SERVO_NEW_SAMPLE_EPS_MM) {
         if (s_distance_last_raw_ready && now_tick > s_distance_last_raw_tick) {
             sample_dt_s = (float)(now_tick - s_distance_last_raw_tick) * 0.001f;
             if (sample_dt_s > DIST_SERVO_MAX_SAMPLE_DT_S) {
@@ -626,6 +626,8 @@ typedef struct {
     uint8_t arrived_confirmed;
     float target_degree;
     uint8_t use_position_servo;
+    uint8_t force_lock_active;
+    float force_lock_degree;
     float last_speed_ref;
     float filtered_degree;
     uint32_t last_tick;
@@ -678,6 +680,17 @@ void YawServo_Reset(void)
 uint8_t YawServo_IsArrived(void)
 {
     return yaw_planner.arrived_confirmed;
+}
+
+void YawServo_ForceLockCurrent(DJI_t *motor)
+{
+    if (motor == NULL) return;
+
+    yaw_planner.force_lock_active = 1U;
+    yaw_planner.force_lock_degree = motor->AxisData.AxisAngle_inDegree;
+    yaw_planner.motor = motor;
+    PID_Clear(&motor->posPID);
+    PID_Clear(&motor->speedPID);
 }
 
 void ArmServo_Reset(void)
@@ -740,6 +753,15 @@ void Yaw_servo(float target_degree, DJI_t *motor)
     current_degree = motor->AxisData.AxisAngle_inDegree;
     Yaw_Plan_Update(target_degree, current_degree, now_tick);
 
+    if (yaw_planner.force_lock_active && yaw_planner.motor == motor) {
+        positionServo(yaw_planner.force_lock_degree, motor);
+        yaw_planner.last_tick = now_tick;
+        yaw_planner.arrived = 1U;
+        yaw_planner.arrived_confirmed = 1U;
+        yaw_planner.arrived_tick = now_tick;
+        return;
+    }
+
     if (yaw_planner.use_position_servo) {
         positionServo(target_degree, motor);
         yaw_planner.last_tick = now_tick;
@@ -778,7 +800,7 @@ void Yaw_servo(float target_degree, DJI_t *motor)
             YAW_HOLD_MAX_SPEED_DEG_PER_S
         );
 
-        if (abs_target_error < 0.2f) {
+        if (abs_target_error < YAW_HOLD_ZERO_TOL_DEG) {
             desired_axis_speed = 0.0f;
         }
 
@@ -802,7 +824,7 @@ void Yaw_servo(float target_degree, DJI_t *motor)
         if (speed_by_brake < speed_mag) speed_mag = speed_by_brake;
         speed_mag = Limit_Float(speed_mag, 0.0f, max_speed_deg_per_s);
 
-        if (speed_mag < YAW_MIN_MOVE_DEG_PER_S) {
+        if (stop_error > 6.0f && speed_mag < YAW_MIN_MOVE_DEG_PER_S) {
             speed_mag = YAW_MIN_MOVE_DEG_PER_S;
         }
 
