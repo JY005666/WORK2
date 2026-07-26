@@ -684,13 +684,13 @@ uint8_t YawServo_IsArrived(void)
 
 void YawServo_ForceLockCurrent(DJI_t *motor)
 {
-    if (motor == NULL) return;
+    // if (motor == NULL) return;
 
-    yaw_planner.force_lock_active = 1U;
-    yaw_planner.force_lock_degree = motor->AxisData.AxisAngle_inDegree;
-    yaw_planner.motor = motor;
-    PID_Clear(&motor->posPID);
-    PID_Clear(&motor->speedPID);
+    // yaw_planner.force_lock_active = 1U;
+    // yaw_planner.force_lock_degree = motor->AxisData.AxisAngle_inDegree;
+    // yaw_planner.motor = motor;
+    // PID_Clear(&motor->posPID);
+    // PID_Clear(&motor->speedPID);
 }
 
 void ArmServo_Reset(void)

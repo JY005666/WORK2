@@ -7,11 +7,11 @@ void StartDefaultTask(void *argument){
     printf("Upper Start\r\n");
     Vision_Init(); // 初始化摄像头
 
-    // Vision_Start(); // 启动摄像头and发送信息
-    // data_receive(pos); //接收信息
-    // Bean_Target_Set(); //处理接收到的信息并设置目标豆子位置
+    Vision_Start(); // 启动摄像头and发送信息
+    data_receive(pos); //接收信息
+    Bean_Target_Set(); //处理接收到的信息并设置目标豆子位置
 
-    Bean_Init(); //单独测试时用，记得删掉
+    // Bean_Init(); //单独测试时用，记得删掉
 
 
     Angle_Init(); 
