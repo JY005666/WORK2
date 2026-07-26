@@ -1,5 +1,6 @@
 #include "UpperStateHelpers.h"
 
+#include <math.h>
 #include <stdlib.h>
 
 static uint8_t s_final_turn_locked = 0U;
@@ -40,8 +41,8 @@ static float GetFinalChassisForStage30(const Angle *target_box, BoxPosition posi
 
 uint8_t IsDistanceAndChassisReady(float distance_tol, float chassis_tol)
 {
-    return (abs(lidar.distance_aver - par.target_distance) < distance_tol) &&
-           (abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < chassis_tol);
+    return (fabsf(lidar.distance_aver - par.target_distance) < distance_tol) &&
+           (fabsf(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < chassis_tol);
 }
 
 void ResetDistanceAndChassisMotors(void)
@@ -135,13 +136,13 @@ void HandleStage30_FirstBeanPlacement(void)
         else {par.degree_chassis = FIRST_BEAN_RIGHT_SAFE_CW_DEG;}
     } else { //
         par.degree_chassis = final_chassis_target;
-        par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+        if(bean[2].target_position != RIGHT_2&&bean[2].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
     }
 
     if(s_final_turn_locked){
-        if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 10.0f) &&
-            (abs(lidar.distance_aver - par.target_distance) < 10.0f)) {
-            // par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+        if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
+            (abs(lidar.distance_aver - par.target_distance) < 15.0f)) {
+            par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
             if (hDJI[3].AxisData.AxisAngle_inDegree  > DELIVERY_RELEASE_LIFT_READY_DEG) {
                 Motor_State_Reset(&hDJI[0]);
                 YawServo_ForceLockCurrent(&hDJI[2]);

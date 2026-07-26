@@ -297,7 +297,7 @@ void Angle_Init(void)
     box_left_2.claw_angle = 58;
 
     box_left_1.distance = 2243.0f;
-    box_left_1.chassis = 470.0f;
+    box_left_1.chassis = 460.0f;
     box_left_1.claw_angle = 105;
 
     box_middle_0.distance = 2160.0f;
@@ -355,7 +355,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
         }
         if(bean[1].target_position == LEFT_2||bean[1].target_position == LEFT_1||bean[1].target_position == MIDDLE_0){
             if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
-                par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+                if(bean[2].target_position != RIGHT_2&&bean[2].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
                 //设置云台目标角度
                 switch (bean[1].target_position) {
                     case LEFT_2: par.degree_chassis = box_left_2.chassis; break;

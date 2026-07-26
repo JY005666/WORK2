@@ -83,13 +83,7 @@ static DistanceServoPlanner_t distance_planner = {0};
 DistanceServoDebug_t g_distance_servo_debug = {0};
 static float s_distance_last_valid_distance = 0.0f;
 static uint32_t s_distance_last_valid_tick = 0U;
-static float s_distance_jump_candidate_distance = 0.0f;
 static uint8_t s_distance_last_valid_ready = 0U;
-static uint8_t s_distance_jump_candidate_valid = 0U;
-static float s_distance_last_raw_distance = 0.0f;
-static uint32_t s_distance_last_raw_tick = 0U;
-static uint32_t s_distance_jump_candidate_tick = 0U;
-static uint8_t s_distance_last_raw_ready = 0U;
 
 static float Limit_Float(float value, float min_value, float max_value)
 {
@@ -154,31 +148,13 @@ static float LowPass_Filter(float raw, float *filtered, float alpha)
 
 /*
  * 距离样本筛选逻辑：
- * 1. 原始测距必须先落在 200~2600mm 的有效工作区间内。
- * 2. 如果新测距相对“上一次有效测距”的变化速度超过物理上限，
- *    则先不让它进入伺服，而是暂存为候选值。
- * 3. 只有当这个候选值持续存在到“物理上已经来得及变化到那里”时，
- *    才把它接纳为新的有效测距。
- *
- * 这样可以同时滤掉：
- * - 超出赛程量程的无效值
- * - 突然跳到很远处的离谱值
- * - 连续两三帧重复出现的异常值
+ * 1. 原始测距必须先落在有效工作区间内。
+ * 2. 无效值短时间内继续沿用上一次有效测距，避免偶发丢帧直接打断控制。
+ * 3. 删除斜率限制和 candidate 暂存后，只要样本有效就直接送入伺服。
  */
 static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_tick, float *reliable_distance)
 {
-    float sample_dt_s = DIST_SERVO_DEFAULT_DT_S;
-    float max_allowed_delta = 0.0f;
-    uint32_t candidate_elapsed_ms = 0U;
-    float candidate_elapsed_s = 0.0f;
     uint32_t hold_ms = 0U;
-    float prev_raw_distance = s_distance_last_raw_distance;
-    uint8_t prev_raw_ready = s_distance_last_raw_ready;
-    float candidate_direction = 0.0f;
-    float raw_direction = 0.0f;
-    float raw_step = 0.0f;
-    float continuous_step_limit = DIST_SERVO_CONTINUOUS_CANDIDATE_STEP_MM;
-    uint8_t allow_small_reverse_jitter = 0U;
 
     if (reliable_distance == NULL) {
         return 0U;
@@ -194,48 +170,6 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
             return 1U;
         }
         return 0U;
-    }
-
-    /*
-     * 串口线程有时会在多个控制周期里重复输出同一个距离值。
-     * 小变化时认为还是同一帧数据，不重新计算“采样时间间隔”。
-     */
-    if (!s_distance_last_raw_ready ||
-        fabsf(raw_distance - s_distance_last_raw_distance) >= DIST_SERVO_NEW_SAMPLE_EPS_MM) {
-        if (s_distance_last_raw_ready && now_tick > s_distance_last_raw_tick) {
-            sample_dt_s = (float)(now_tick - s_distance_last_raw_tick) * 0.001f;
-            if (sample_dt_s > DIST_SERVO_MAX_SAMPLE_DT_S) {
-                sample_dt_s = DIST_SERVO_MAX_SAMPLE_DT_S;
-            }
-            if (sample_dt_s < DIST_SERVO_DEFAULT_DT_S) {
-                sample_dt_s = DIST_SERVO_DEFAULT_DT_S;
-            }
-        }
-
-        s_distance_last_raw_distance = raw_distance;
-        s_distance_last_raw_tick = now_tick;
-        s_distance_last_raw_ready = 1U;
-    } else {
-        if ((now_tick - s_distance_last_raw_tick) > DIST_SERVO_RAW_STALE_MS) {
-            return 0U;
-        }
-        /*
-         * 如果重复输出的是同一个“跳变候选值”，不能直接返回，
-         * 否则候选值永远无法按时间累计到“物理上合理”。
-         * 这里允许它继续往后走，后面会用 candidate_elapsed_s 做斜率判定。
-         */
-        if (s_distance_jump_candidate_valid &&
-            fabsf(raw_distance - s_distance_jump_candidate_distance) <= DIST_SERVO_CANDIDATE_MATCH_MM) {
-            sample_dt_s = DIST_SERVO_DEFAULT_DT_S;
-        } else {
-            if (s_distance_last_valid_ready) {
-                *reliable_distance = s_distance_last_valid_distance;
-                return 1U;
-            }
-
-            *reliable_distance = raw_distance;
-            return 1U;
-        }
     }
 
     if (raw_distance < DIST_SERVO_EFFECTIVE_MIN_MM || raw_distance > DIST_SERVO_EFFECTIVE_MAX_MM) {
@@ -254,85 +188,12 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
         s_distance_last_valid_distance = raw_distance;
         s_distance_last_valid_tick = now_tick;
         s_distance_last_valid_ready = 1U;
-        s_distance_jump_candidate_valid = 0U;
-        *reliable_distance = raw_distance;
-        return 1U;
     }
 
-    max_allowed_delta = DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S * sample_dt_s;
-    if (raw_distance < s_distance_last_valid_distance) {
-        /* 由远到近时放宽一点接纳速度，避免 reliable 长时间卡在远处。 */
-        max_allowed_delta *= 1.6f;
-    }
-    if (fabsf(raw_distance - s_distance_last_valid_distance) <= max_allowed_delta) {
-        s_distance_last_valid_distance = raw_distance;
-        s_distance_last_valid_tick = now_tick;
-        s_distance_jump_candidate_valid = 0U;
-        *reliable_distance = raw_distance;
-        return 1U;
-    }
-
-    if (!s_distance_jump_candidate_valid) {
-        s_distance_jump_candidate_distance = raw_distance;
-        s_distance_jump_candidate_tick = now_tick;
-        s_distance_jump_candidate_valid = 1U;
-        *reliable_distance = s_distance_last_valid_distance;
-        return 1U;
-    }
-
-    if (fabsf(raw_distance - s_distance_jump_candidate_distance) > DIST_SERVO_CANDIDATE_MATCH_MM) {
-        candidate_direction = Sign_Float(s_distance_jump_candidate_distance - s_distance_last_valid_distance);
-        raw_direction = Sign_Float(raw_distance - s_distance_last_valid_distance);
-        raw_step = prev_raw_ready ? fabsf(raw_distance - prev_raw_distance) : 0.0f;
-        if (candidate_direction < 0.0f) {
-            continuous_step_limit *= 1.5f;
-            /*
-             * 由远到近时，测距模块轻微晃动可能会让原始值短暂回摆一点点。
-             * 只要它仍然比 last_valid 更近，就不要立刻把整段候选重新计时。
-             */
-            if (raw_direction > 0.0f &&
-                raw_distance < s_distance_last_valid_distance &&
-                prev_raw_ready &&
-                raw_step <= (DIST_SERVO_CANDIDATE_MATCH_MM * 0.5f)) {
-                allow_small_reverse_jitter = 1U;
-            }
-        }
-
-        if (candidate_direction == 0.0f ||
-            (!allow_small_reverse_jitter && raw_direction != candidate_direction) ||
-            (prev_raw_ready && raw_step > continuous_step_limit)) {
-            s_distance_jump_candidate_distance = raw_distance;
-            s_distance_jump_candidate_tick = now_tick;
-            *reliable_distance = s_distance_last_valid_distance;
-            return 1U;
-        }
-
-        /*
-         * 连续同方向快速接近时，不要因为每一步都超出 match 窗口就反复重置候选。
-         * 这里更新候选距离，但保留原始 candidate_tick，让累计时间继续增长。
-         */
-        s_distance_jump_candidate_distance = raw_distance;
-    }
-
-    candidate_elapsed_ms = now_tick - s_distance_jump_candidate_tick;
-    candidate_elapsed_s = (float)candidate_elapsed_ms * 0.001f;
-    if (candidate_elapsed_s < DIST_SERVO_DEFAULT_DT_S) {
-        candidate_elapsed_s = DIST_SERVO_DEFAULT_DT_S;
-    }
-
-    max_allowed_delta = DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S * candidate_elapsed_s;
-    if (raw_distance < s_distance_last_valid_distance) {
-        max_allowed_delta *= 1.6f;
-    }
-    if (fabsf(raw_distance - s_distance_last_valid_distance) <= max_allowed_delta) {
-        s_distance_last_valid_distance = raw_distance;
-        s_distance_last_valid_tick = now_tick;
-        s_distance_jump_candidate_valid = 0U;
-        *reliable_distance = raw_distance;
-        return 1U;
-    }
-
-    *reliable_distance = s_distance_last_valid_distance;
+    s_distance_last_valid_distance = raw_distance;
+    s_distance_last_valid_tick = now_tick;
+    s_distance_last_valid_ready = 1U;
+    *reliable_distance = raw_distance;
     return 1U;
 }
 
@@ -358,13 +219,7 @@ void DistanceServo_Reset(DJI_t *motor)
         memset(&g_distance_servo_debug, 0, sizeof(g_distance_servo_debug));
         s_distance_last_valid_distance = 0.0f;
         s_distance_last_valid_tick = 0U;
-        s_distance_jump_candidate_distance = 0.0f;
         s_distance_last_valid_ready = 0U;
-        s_distance_jump_candidate_valid = 0U;
-        s_distance_last_raw_distance = 0.0f;
-        s_distance_last_raw_tick = 0U;
-        s_distance_jump_candidate_tick = 0U;
-        s_distance_last_raw_ready = 0U;
     }
 }
 
@@ -405,12 +260,6 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
             (uint8_t)(Distance_Is_Valid(current_distance) &&
                       current_distance >= DIST_SERVO_EFFECTIVE_MIN_MM &&
                       current_distance <= DIST_SERVO_EFFECTIVE_MAX_MM);
-        s_distance_jump_candidate_distance = current_distance;
-        s_distance_jump_candidate_valid = 0U;
-        s_distance_last_raw_distance = current_distance;
-        s_distance_last_raw_tick = now_tick;
-        s_distance_jump_candidate_tick = now_tick;
-        s_distance_last_raw_ready = 1U;
     }
 
     if (fabsf(target_distance - distance_planner.target_distance) > DIST_SERVO_TARGET_CHANGE_TOL_MM) {

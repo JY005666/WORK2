@@ -22,7 +22,7 @@ void StartDefaultTask(void *argument){
 
     DJI_Init();//初始化电机参数
 
-    // Bean_Target_Set();
+
     CANFilterInit(&hcan1); //初始化滤波器
     init_paramater(&par);
     //初始化夹爪两个舵机

@@ -6,7 +6,7 @@
 #define CLAW_UP 1
 #define CLAW_DOWN 2
 #define CLAW_OPEN 120
-#define CLAW_HALF_OPEN 90
+#define CLAW_HALF_OPEN 75
 #define CLAW_CLOSE 50
 
 #define SAFE_DIST_FOR_BOX_FINAL_TURN_MM  1000.0f

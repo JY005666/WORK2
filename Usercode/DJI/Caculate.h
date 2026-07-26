@@ -35,22 +35,7 @@
 #define DIST_SERVO_EFFECTIVE_MIN_MM   100.0f
 #define DIST_SERVO_EFFECTIVE_MAX_MM   2800.0f
 
-/* 测距变化速度的物理上限，超过这个斜率就先不让它进入伺服。 */
-#define DIST_SERVO_MAX_VALID_SLOPE_MM_PER_S 2000.0f
-
-/* 小于这个差值时，认为串口里还是同一帧测距，不重复更新时间基准。 */
-#define DIST_SERVO_NEW_SAMPLE_EPS_MM  1.0f
-
-/* 大跳变出现后，后续样本若仍接近这个候选值，就继续累计观察。 */
-#define DIST_SERVO_CANDIDATE_MATCH_MM 80.0f
-
-/* 候选跳变若连续同方向推进，且单步变化不离谱，也允许沿用原候选的起始时间继续累计。 */
-#define DIST_SERVO_CONTINUOUS_CANDIDATE_STEP_MM 300.0f
-
-/* 斜率判定用的最大采样间隔上限，防止长时间停更后一次放太大。 */
-#define DIST_SERVO_MAX_SAMPLE_DT_S    0.20f
 #define DIST_SERVO_INVALID_HOLD_MS    120U
-#define DIST_SERVO_RAW_STALE_MS       120U
 
 extern uint16_t distance_offset;
 
