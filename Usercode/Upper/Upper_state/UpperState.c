@@ -66,7 +66,7 @@ void Upper_State_Task(void *arg)
                 HandleStage31_SecondBeanPickup(); //判断第二个豆子是哪个,并到达抓取位置
                 break;
             case 40:
-                if (IsDistanceAndChassisReady(8.0f, 1.5f)) { //判断是否到达第二个豆子抓取位置
+                if (IsDistanceAndChassisReady(10.0f, 3.0f)) { //判断是否到达第二个豆子抓取位置
                     YawServo_ForceLockCurrent(&hDJI[2]);
                     osDelay(20);
                     stage_flag = 50;
@@ -128,7 +128,7 @@ void Upper_State_Task(void *arg)
                     par.target_distance = bean_left.distance;
                     Claw_degree_set(bean_left.claw_angle, CLAW_UP);
                 }
-                if (IsDistanceAndChassisReady(8.0f, 1.5f)) { //判断是否到达第三个豆子抓取位置
+                if (IsDistanceAndChassisReady(10.0f, 3.0f)) { //判断是否到达第三个豆子抓取位置
                     YawServo_ForceLockCurrent(&hDJI[2]);
                     osDelay(20);
                     stage_flag = 910;
@@ -262,7 +262,7 @@ static void HandleStage0(void)
             Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
 
             par.degree_chassis = bean_middle.chassis;
-            if (IsDistanceAndChassisReady(8.0f, 1.5f)) {
+            if (IsDistanceAndChassisReady(10.0f, 3.0f)) {
                 osDelay(300);
                 stage_flag = 10;
             }

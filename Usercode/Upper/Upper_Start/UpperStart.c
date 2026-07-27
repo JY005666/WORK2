@@ -4,6 +4,8 @@ uint8_t pos[3] = {0,0,0};
 
 void StartDefaultTask(void *argument){
     // while(1){osDelay(100);printf("111");}
+    DJI_Init();//初始化电机参数
+    CANFilterInit(&hcan1); //初始化滤波器
     printf("Upper Start\r\n");
     Vision_Init(); // 初始化摄像头
 
@@ -18,12 +20,8 @@ void StartDefaultTask(void *argument){
     STP23L_Init(&huart1); // 开启距离传感接收中断
     DistanceUpdate_Start(); // 开启距离传感更新任务
     
-    osDelay(2500);//等待4s，方便烧录
+    osDelay(1500);//等待4s，方便烧录
 
-    DJI_Init();//初始化电机参数
-
-
-    CANFilterInit(&hcan1); //初始化滤波器
     init_paramater(&par);
     //初始化夹爪两个舵机
     Claw_Init();
