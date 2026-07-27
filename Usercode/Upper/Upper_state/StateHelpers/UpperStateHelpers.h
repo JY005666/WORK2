@@ -18,12 +18,12 @@
 
 #define LEFT_BEAN_DELIVERY_LIFT_TARGET_DEG     (-650.0f)
 #define LEFT_BEAN_DELIVERY_LIFT_READY_DEG      (-400.0f)
-#define RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG    (-620.0f)
+#define RIGHT_BEAN_DELIVERY_LIFT_TARGET_DEG    (-650.0f)
 #define RIGHT_BEAN_DELIVERY_LIFT_READY_DEG     (-520.0f)
 #define MIDDLE_BEAN_DELIVERY_LIFT_TARGET_DEG   (-680.0f)
 #define MIDDLE_BEAN_DELIVERY_LIFT_READY_DEG    (-630.0f)
-#define DELIVERY_RELEASE_LIFT_TARGET_DEG       (-360.0f)
-#define DELIVERY_RELEASE_LIFT_READY_DEG        (-370.0f)
+#define DELIVERY_RELEASE_LIFT_TARGET_DEG       (-290.0f)
+#define DELIVERY_RELEASE_LIFT_READY_DEG        (-330.0f)
 
 uint8_t IsDistanceAndChassisReady(float distance_tol, float chassis_tol);
 void ResetDistanceAndChassisMotors(void);
