@@ -63,7 +63,7 @@ void LiftAndRotateToPlacement(float lift_target, float lift_ready_threshold, flo
     par.degree_claw = lift_target;
     if (hDJI[3].AxisData.AxisAngle_inDegree < lift_ready_threshold) {
         par.degree_chassis = chassis_target;
-        if (abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < chassis_tol) {
+        if (fabsf(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < chassis_tol) {
             stage_flag = next_stage;
             ResetDistanceAndChassisMotors();
         }
@@ -136,17 +136,16 @@ void HandleStage30_FirstBeanPlacement(void)
         else {par.degree_chassis = FIRST_BEAN_RIGHT_SAFE_CW_DEG;}
     } else { //
         par.degree_chassis = final_chassis_target;
-        if(bean[2].target_position != RIGHT_2&&bean[2].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
+        // if(bean[2].target_position != RIGHT_2&&bean[2].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
     }
 
     if(s_final_turn_locked){
-        if ((abs(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
-            (abs(lidar.distance_aver - par.target_distance) < 15.0f)) {
+        if ((fabsf(hDJI[2].AxisData.AxisAngle_inDegree - par.degree_chassis) < 8.0f) &&
+            (fabsf(lidar.distance_aver - par.target_distance) < 15.0f)) {
             par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
             if (hDJI[3].AxisData.AxisAngle_inDegree  > DELIVERY_RELEASE_LIFT_READY_DEG) {
                 Motor_State_Reset(&hDJI[0]);
-                YawServo_ForceLockCurrent(&hDJI[2]);
-                osDelay(80);
+
                 Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
                 osDelay(800);
                 Motor_State_Reset(&hDJI[2]);

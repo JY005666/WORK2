@@ -7,7 +7,7 @@
 #include "stm32f4xx_it.h"
 #include "stdio.h"
 
-#define DIST_FILTER_ALPHA             0.03f
+#define DIST_FILTER_ALPHA             1.0f
 #define DIST_OFFSET_SAMPLE_COUNT      5
 #define DIST_OFFSET_TIMEOUT_MS        200
 
@@ -21,10 +21,12 @@
 #define DIST_SERVO_MIN_MOVE_RPM       140.0f  //最小运动速度
 #define DIST_SERVO_APPROACH_SPEED_RPM 220.0f
 #define DIST_SERVO_HOLD_MAX_SPEED_RPM 80.0f
-#define DIST_SERVO_NEAR_SWITCH_IN_MM  750.0f
-#define DIST_SERVO_NEAR_SWITCH_OUT_MM 850.0f
-#define DIST_SERVO_ACCEL_RPM_PER_S    22000.0f
-#define DIST_SERVO_DECEL_RPM_PER_S    24000.0f
+
+#define DIST_SERVO_NEAR_SWITCH_IN_MM  1050.0f
+#define DIST_SERVO_NEAR_SWITCH_OUT_MM 1250.0f
+
+#define DIST_SERVO_ACCEL_RPM_PER_S    35000.0f
+#define DIST_SERVO_DECEL_RPM_PER_S    42000.0f
 #define DIST_SERVO_DEFAULT_DT_S       0.001f
 #define DIST_SERVO_MAX_DT_S           0.020f
 #define DIST_SERVO_SENSOR_MIN_MM      20.0f
@@ -33,23 +35,29 @@
 
 /* 距离伺服实际有效区间，超出这个范围的测距直接视为无效。 */
 #define DIST_SERVO_EFFECTIVE_MIN_MM   100.0f
-#define DIST_SERVO_EFFECTIVE_MAX_MM   2800.0f
+#define DIST_SERVO_EFFECTIVE_MAX_MM   3000.0f
 
 #define DIST_SERVO_INVALID_HOLD_MS    120U
+#define DIST_SERVO_INVALID_HOLD_RPM   800.0f
 
 extern uint16_t distance_offset;
 
 typedef struct {
     float target_distance;
+    float live_distance;
     float raw_distance;
     float reliable_distance;
     float filtered_distance;
     float control_distance;
+    float error_distance;
+    float stop_error_distance;
     float desired_speed_ref;
     float motor_rpm;
     uint8_t use_reliable_near_target;
     uint8_t arrived;
     uint8_t arrived_confirmed;
+    uint8_t stall_limited;
+    uint8_t mismatch_braking;
 } DistanceServoDebug_t;
 
 extern DistanceServoDebug_t g_distance_servo_debug;

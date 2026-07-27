@@ -155,6 +155,11 @@ static float LowPass_Filter(float raw, float *filtered, float alpha)
 static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_tick, float *reliable_distance)
 {
     uint32_t hold_ms = 0U;
+    float motor_rpm_abs = 0.0f;
+
+    if (distance_planner.initialized && distance_planner.motor != NULL) {
+        motor_rpm_abs = fabsf(distance_planner.motor->FdbData.rpm);
+    }
 
     if (reliable_distance == NULL) {
         return 0U;
@@ -163,6 +168,9 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     if (!Float_Is_Usable(raw_distance)) {
         if (s_distance_last_valid_ready) {
             hold_ms = now_tick - s_distance_last_valid_tick;
+            if (motor_rpm_abs > DIST_SERVO_INVALID_HOLD_RPM) {
+                return 0U;
+            }
             if (hold_ms > DIST_SERVO_INVALID_HOLD_MS) {
                 return 0U;
             }
@@ -175,6 +183,9 @@ static uint8_t DistanceServo_GetReliableSample(float raw_distance, uint32_t now_
     if (raw_distance < DIST_SERVO_EFFECTIVE_MIN_MM || raw_distance > DIST_SERVO_EFFECTIVE_MAX_MM) {
         if (s_distance_last_valid_ready) {
             hold_ms = now_tick - s_distance_last_valid_tick;
+            if (motor_rpm_abs > DIST_SERVO_INVALID_HOLD_RPM) {
+                return 0U;
+            }
             if (hold_ms > DIST_SERVO_INVALID_HOLD_MS) {
                 return 0U;
             }
@@ -238,7 +249,8 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
     float reliable_distance_debug = current_distance;
     float filtered_distance_debug = current_distance;
     float control_distance_debug = current_distance;
-
+    float error_distance_debug = target_distance - current_distance;
+    float stop_error_distance_debug = fabsf(error_distance_debug);
     if (motor == NULL) return 0.0f;
 
     now_tick = HAL_GetTick();
@@ -308,6 +320,7 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
         reliable_distance_debug = reliable_distance;
         filtered_distance_debug = filtered_distance;
         control_distance_debug = control_distance;
+        error_distance_debug = error;
 
         if (distance_planner.arrived) {
             effective_tol = DIST_SERVO_POS_TOL_MM * 1.5f;
@@ -315,6 +328,7 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
 
         stop_error = abs_error - effective_tol;
         if (stop_error < 0.0f) stop_error = 0.0f;
+        stop_error_distance_debug = stop_error;
 
         if (abs_error <= effective_tol) {
             desired_speed_ref = error * DIST_SERVO_HOLD_KP_RPM_PER_MM;
@@ -386,15 +400,20 @@ float Distance_Speed_Plan(float target_distance, float current_distance, DJI_t *
     }
 
     g_distance_servo_debug.target_distance = target_distance;
+    g_distance_servo_debug.live_distance = lidar.distance_aver;
     g_distance_servo_debug.raw_distance = current_distance;
     g_distance_servo_debug.reliable_distance = reliable_distance_debug;
     g_distance_servo_debug.filtered_distance = filtered_distance_debug;
     g_distance_servo_debug.control_distance = control_distance_debug;
+    g_distance_servo_debug.error_distance = error_distance_debug;
+    g_distance_servo_debug.stop_error_distance = stop_error_distance_debug;
     g_distance_servo_debug.desired_speed_ref = distance_planner.last_speed_ref;
     g_distance_servo_debug.motor_rpm = motor->FdbData.rpm;
     g_distance_servo_debug.use_reliable_near_target = distance_planner.use_reliable_near_target;
     g_distance_servo_debug.arrived = distance_planner.arrived;
     g_distance_servo_debug.arrived_confirmed = distance_planner.arrived_confirmed;
+    g_distance_servo_debug.stall_limited = 0U;
+    g_distance_servo_debug.mismatch_braking = 0U;
 
     distance_planner.last_tick = now_tick;
     return distance_planner.last_speed_ref;

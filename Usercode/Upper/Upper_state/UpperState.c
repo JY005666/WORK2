@@ -105,9 +105,9 @@ void Upper_State_Task(void *arg)
                 HandleBeanDelivery(g_second_bean_position, 70);
                 break;
             case 70: //放下第二个豆子
-                // par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+                par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
                 if (hDJI[3].AxisData.AxisAngle_inDegree  > DELIVERY_RELEASE_LIFT_READY_DEG) {
-                    YawServo_ForceLockCurrent(&hDJI[2]);
+                    // YawServo_ForceLockCurrent(&hDJI[2]);
                     osDelay(20);
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
                     osDelay(800);
@@ -167,7 +167,7 @@ void Upper_State_Task(void *arg)
                 HandleBeanDelivery(g_third_bean_position, 930);
                 break;
             case 930:
-                // par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+                par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
                 if (hDJI[3].AxisData.AxisAngle_inDegree  > DELIVERY_RELEASE_LIFT_READY_DEG) {
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
                     osDelay(800);
@@ -214,13 +214,16 @@ void DebugPrint(void)
         return;
     }
 
-    printf("stage:%u,target_distance:%.1f,lidar:%d,reliable:%.1f,filtered:%.1f,control:%.1f,speed_ref:%.1f,motor_rpm:%.1f,near:%u,arrived:%u,arrived_confirmed:%u,target_chassis:%.1f,chassis:%.1f,claw:%.1f\r\n",
+    printf("stage:%u,target_distance:%.1f,lidar_live:%.1f,raw:%.1f,reliable:%.1f,filtered:%.1f,control:%.1f,error:%.1f,stop_error:%.1f,speed_ref:%.1f,motor_rpm:%.1f,near:%u,arrived:%u,arrived_confirmed:%u,target_chassis:%.1f,chassis:%.1f,claw:%.1f\r\n",
            stage_flag,
            g_distance_servo_debug.target_distance,
-           (int)g_distance_servo_debug.raw_distance,
+           lidar.distance_aver,
+           g_distance_servo_debug.raw_distance,
            g_distance_servo_debug.reliable_distance,
            g_distance_servo_debug.filtered_distance,
            g_distance_servo_debug.control_distance,
+           g_distance_servo_debug.error_distance,
+           g_distance_servo_debug.stop_error_distance,
            g_distance_servo_debug.desired_speed_ref,
            g_distance_servo_debug.motor_rpm,
            g_distance_servo_debug.use_reliable_near_target,
@@ -250,7 +253,7 @@ static void HandleStage0(void)
 {
     par.degree_claw = -650.0f;
     if(hDJI[3].AxisData.AxisAngle_inDegree<-50.0f){
-        if (lidar.distance_aver > 1000.0f) {
+        if (lidar.distance_aver > 1100.0f) {
             par.degree_chassis = 50.0f;
             par.target_distance = bean_middle.distance;
         }
@@ -302,7 +305,7 @@ void Angle_Init(void)
 
     box_middle_0.distance = 2160.0f;
     box_middle_0_chassis_cw = 543.0f;
-    box_middle_0_chassis_ccw = -538.0f;
+    box_middle_0_chassis_ccw = -542.0f;
     box_middle_0.claw_angle = 85;
 
     box_right_1.distance = 2235.0f;
@@ -355,7 +358,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
         }
         if(bean[1].target_position == LEFT_2||bean[1].target_position == LEFT_1||bean[1].target_position == MIDDLE_0){
             if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
-                if(bean[2].target_position != RIGHT_2&&bean[2].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
+                // if(bean[1].target_position != RIGHT_2&&bean[1].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
                 //设置云台目标角度
                 switch (bean[1].target_position) {
                     case LEFT_2: par.degree_chassis = box_left_2.chassis; break;
@@ -371,7 +374,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
                 par.degree_chassis = FIRST_BEAN_RIGHT_SAFE_CW_DEG ;
             } else
             if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
-                par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+                // if(bean[1].target_position != RIGHT_2&&bean[1].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
                 switch (bean[1].target_position) {
                     case LEFT_2: par.degree_chassis = box_left_2.chassis; break;
                     case LEFT_1: par.degree_chassis = box_left_1.chassis; break;
@@ -392,7 +395,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
         }
         if(bean[0].target_position == RIGHT_2||bean[0].target_position == RIGHT_1||bean[0].target_position == MIDDLE_0){
             if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
-                par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+                // if(bean[0].target_position != RIGHT_2&&bean[0].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
                 switch (bean[0].target_position) {
                     case RIGHT_1: par.degree_chassis = box_right_1.chassis; break;
                     case RIGHT_2: par.degree_chassis = box_right_2.chassis; break;
@@ -408,7 +411,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
                 par.degree_chassis = FIRST_BEAN_LEFT_SAFE_CCW_DEG ;
             } else
             if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
-                par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
+                // if(bean[0].target_position != RIGHT_2&&bean[0].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
                 switch (bean[0].target_position) {
                     case RIGHT_1: par.degree_chassis = box_right_1.chassis; break;
                     case RIGHT_2: par.degree_chassis = box_right_2.chassis; break;
@@ -420,7 +423,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
         }
     }
     if(IsDistanceAndChassisReady(15.0f, 8.0f)){
-        YawServo_ForceLockCurrent(&hDJI[2]);
+        // YawServo_ForceLockCurrent(&hDJI[2]);
         osDelay(20);
         stage_flag = next_stage;
     }
