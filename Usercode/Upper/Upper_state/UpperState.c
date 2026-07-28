@@ -283,7 +283,7 @@ static void HandleStage10(void)
 
 void Angle_Init(void)
 {
-    bean_left.distance = 260.0f;
+    bean_left.distance = 255.0f;
     bean_left.chassis = -96.0f;
     bean_left.claw_angle = 115;
 
@@ -304,8 +304,8 @@ void Angle_Init(void)
     box_left_1.claw_angle = 105;
 
     box_middle_0.distance = 2160.0f;
-    box_middle_0_chassis_cw = 543.0f;
-    box_middle_0_chassis_ccw = -542.0f;
+    box_middle_0_chassis_cw = 538.0f;
+    box_middle_0_chassis_ccw = -548.0f;
     box_middle_0.claw_angle = 85;
 
     box_right_1.distance = 2235.0f;
@@ -357,7 +357,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
             case RIGHT_2: par.target_distance = box_right_2.distance; Claw_degree_set(box_right_2.claw_angle, CLAW_UP); break;
         }
         if(bean[1].target_position == LEFT_2||bean[1].target_position == LEFT_1||bean[1].target_position == MIDDLE_0){
-            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM-200){
                 // if(bean[1].target_position != RIGHT_2&&bean[1].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
                 //设置云台目标角度
                 switch (bean[1].target_position) {
@@ -394,7 +394,7 @@ void HandleBeanDelivery(BeanPosition bean_position, uint16_t next_stage){
             case RIGHT_2: par.target_distance = box_right_2.distance; Claw_degree_set(box_right_2.claw_angle, CLAW_UP); break;
         }
         if(bean[0].target_position == RIGHT_2||bean[0].target_position == RIGHT_1||bean[0].target_position == MIDDLE_0){
-            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM){
+            if(lidar.distance_aver > SAFE_DIST_FOR_BOX_FINAL_TURN_MM-200){
                 // if(bean[0].target_position != RIGHT_2&&bean[0].target_position != LEFT_2){par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;}
                 switch (bean[0].target_position) {
                     case RIGHT_1: par.degree_chassis = box_right_1.chassis; break;
