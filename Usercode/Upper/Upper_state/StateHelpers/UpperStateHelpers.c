@@ -145,9 +145,14 @@ void HandleStage30_FirstBeanPlacement(void)
             par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
             if (hDJI[3].AxisData.AxisAngle_inDegree  > DELIVERY_RELEASE_LIFT_READY_DEG) {
                 Motor_State_Reset(&hDJI[0]);
-
                 Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                osDelay(800);
+                osDelay(200);
+                Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                osDelay(200);
+                Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                osDelay(200);
+                Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                osDelay(200);
                 Motor_State_Reset(&hDJI[2]);
                 s_final_turn_locked = 0U;
                 stage_flag = 31;
