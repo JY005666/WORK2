@@ -110,7 +110,13 @@ void Upper_State_Task(void *arg)
                     // YawServo_ForceLockCurrent(&hDJI[2]);
                     osDelay(20);
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(800);
+                    osDelay(200);
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(200);
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(200);
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(200);
                     ResetDistanceAndChassisMotors();
                     stage_flag = 900;
                 }
@@ -170,7 +176,13 @@ void Upper_State_Task(void *arg)
                 par.degree_claw = DELIVERY_RELEASE_LIFT_TARGET_DEG;
                 if (hDJI[3].AxisData.AxisAngle_inDegree  > DELIVERY_RELEASE_LIFT_READY_DEG) {
                     Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
-                    osDelay(800);
+                    osDelay(200);
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(200);
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(200);
+                    Claw_degree_set(CLAW_HALF_OPEN, CLAW_DOWN);
+                    osDelay(200);
                     ResetDistanceAndChassisMotors();
                     stage_flag = 1000;
                 }
