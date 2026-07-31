@@ -283,11 +283,11 @@ static void HandleStage10(void)
 
 void Angle_Init(void)
 {
-    bean_left.distance = 250.0f;
+    bean_left.distance = 245.0f;
     bean_left.chassis = -96.0f;
     bean_left.claw_angle = 123;
 
-    bean_right.distance = 265.0f;
+    bean_right.distance = 255.0f;
     bean_right.chassis = 88.0f;
     bean_right.claw_angle = 63;
 
