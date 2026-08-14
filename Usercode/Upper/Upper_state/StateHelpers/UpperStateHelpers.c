@@ -118,8 +118,10 @@ void HandleStage30_FirstBeanPlacement(void)
     }
 
     Claw_degree_set(target_box->claw_angle, CLAW_UP);
+    if(fabs(hDJI[2].AxisData.AxisAngle_inDegree) > 10.0f){
+         par.target_distance = target_box->distance;
+    }
 
-    par.target_distance = target_box->distance;
     if (target_is_left_side) {
         final_chassis_target = GetFinalChassisForStage30(target_box, bean[2].target_position, 1U);
     } else {
