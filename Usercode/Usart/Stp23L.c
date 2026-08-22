@@ -2,6 +2,8 @@
 #include "HostControl.h"
 #include <string.h>
 
+extern volatile uint8_t g_vision_ack_done;
+
 
 
 
@@ -80,6 +82,35 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         HAL_UART_Receive_IT(&huart1, usart1_rx, 1);
     }
     if(huart->Instance == USART2){
+        static uint8_t ack_state = 0;
+
+        switch (ack_state)
+        {
+            case 0:
+                ack_state = (rx_byte == 0xAA) ? 1U : 0U;
+                break;
+
+            case 1:
+                ack_state = (rx_byte == 0x32) ? 2U : ((rx_byte == 0xAA) ? 1U : 0U);
+                break;
+
+            case 2:
+                ack_state = (rx_byte == 0x11) ? 3U : ((rx_byte == 0xAA) ? 1U : 0U);
+                break;
+
+            case 3:
+                if (rx_byte == 0x55)
+                {
+                    g_vision_ack_done = 1U;
+                }
+                ack_state = (rx_byte == 0xAA) ? 1U : 0U;
+                break;
+
+            default:
+                ack_state = 0U;
+                break;
+        }
+
         rx_frame.last_tick = HAL_GetTick();
         switch (rx_frame.state)
         {

@@ -8,6 +8,7 @@
 paramater par;
 
 uint16_t stage_flag = 0;
+uint8_t pos[3] = {0,0,0};
 
 // 箱子和豆子（视觉识别）
 Bean bean[3];
@@ -66,9 +67,7 @@ void Upper_State_Task(void *arg)
                 HandleStage31_SecondBeanPickup(); //判断第二个豆子是哪个,并到达抓取位置
                 break;
             case 40:
-                if (IsDistanceAndChassisReady(10.0f, 3.0f)) { //判断是否到达第二个豆子抓取位置
-                    YawServo_ForceLockCurrent(&hDJI[2]);
-                    osDelay(20);
+                if (IsDistanceAndChassisReady(10.0f, 1.5f)) { //判断是否到达第二个豆子抓取位置
                     stage_flag = 50;
                 }
                 break;
@@ -134,7 +133,7 @@ void Upper_State_Task(void *arg)
                     par.target_distance = bean_left.distance;
                     Claw_degree_set(bean_left.claw_angle, CLAW_UP);
                 }
-                if (IsDistanceAndChassisReady(10.0f, 3.0f)) { //判断是否到达第三个豆子抓取位置
+                if (IsDistanceAndChassisReady(10.0f, 1.5f)) { //判断是否到达第三个豆子抓取位置
                     YawServo_ForceLockCurrent(&hDJI[2]);
                     osDelay(20);
                     stage_flag = 910;
@@ -274,8 +273,11 @@ static void HandleStage0(void)
             Claw_degree_set(bean_middle.claw_angle, CLAW_UP);
 
             par.degree_chassis = bean_middle.chassis;
-            if (IsDistanceAndChassisReady(10.0f, 3.0f)) {
-                osDelay(300);
+            if (IsDistanceAndChassisReady(10.0f, 2.0f)) {
+                Vision_Start(0x22); // 启动摄像头and发送信息
+                data_receive(pos); //接收信息
+                Bean_Target_Set(); //处理接收到的信息并设置目标豆子位置
+                // while(1);
                 stage_flag = 10;
             }
         }
@@ -295,37 +297,37 @@ static void HandleStage10(void)
 
 void Angle_Init(void)
 {
-    bean_left.distance = 245.0f;
-    bean_left.chassis = -96.0f;
+    bean_left.distance = 240.0f;
+    bean_left.chassis = -90.0f;
     bean_left.claw_angle = 123;
 
-    bean_right.distance = 255.0f;
-    bean_right.chassis = 88.0f;
+    bean_right.distance = 245.0f;
+    bean_right.chassis = 96.0f;
     bean_right.claw_angle = 63;
 
-    bean_middle.distance = 657.0f;
-    bean_middle.chassis = -3.0f;
+    bean_middle.distance = 637.0f;
+    bean_middle.chassis = 3.0f;
     bean_middle.claw_angle = 93;
 
     box_left_2.distance = 2470.0f;
-    box_left_2.chassis = 345.0f;
+    box_left_2.chassis = 347.0f;
     box_left_2.claw_angle = 66;
 
     box_left_1.distance = 2243.0f;
-    box_left_1.chassis = 460.0f;
+    box_left_1.chassis = 463.0f;
     box_left_1.claw_angle = 115;
 
     box_middle_0.distance = 2160.0f;
-    box_middle_0_chassis_cw = 538.0f;
-    box_middle_0_chassis_ccw = -548.0f;
+    box_middle_0_chassis_cw = 540.0f;
+    box_middle_0_chassis_ccw = -546.0f;
     box_middle_0.claw_angle = 93;
 
     box_right_1.distance = 2235.0f;
-    box_right_1.chassis = -473.0f;
+    box_right_1.chassis = -466.0f;
     box_right_1.claw_angle = 65;
 
     box_right_2.distance = 2435.0f;
-    box_right_2.chassis = -353.0f;
+    box_right_2.chassis = -351.0f;
     box_right_2.claw_angle = 117;
 }
 
@@ -337,7 +339,7 @@ void Bean_Init(void)
 
     bean[0].target_position = LEFT_2;
     bean[1].target_position = RIGHT_1;
-    bean[2].target_position = MIDDLE_0;
+    bean[2].target_position = RIGHT_2;
 }
 
 void Bean_Target_Set(void)

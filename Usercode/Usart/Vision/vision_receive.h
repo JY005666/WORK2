@@ -32,9 +32,10 @@ typedef struct
 } RxFrame_t;
 
 extern uint8_t g_pos[3];
+extern volatile uint8_t g_vision_ack_done;
 
 void Vision_Init(void);
-void Vision_Start(void);
+void Vision_Start(uint8_t cmd);
 void Vision_Process(void);
 
 uint8_t Vision_IsDone(void);
@@ -43,6 +44,8 @@ uint8_t Vision_GetPos(uint8_t out[3]);
 
 void data_receive(uint8_t *pos_out);     // 改为带参数，传入外部数组指针
 void Vision_Clear(void);
+void Vision_ClearAck(void);
+uint8_t Vision_WaitAck(uint32_t timeout_ms);
 
 #endif
 

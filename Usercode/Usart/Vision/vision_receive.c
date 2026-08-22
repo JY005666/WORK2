@@ -1,5 +1,6 @@
 ﻿#include "vision_receive.h"
 #include "usart.h"
+#include "cmsis_os.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -10,6 +11,7 @@ extern uint8_t rx_byte;
 
 static volatile uint8_t g_done = 0;
 static volatile uint8_t g_error = 0;
+volatile uint8_t g_vision_ack_done = 0;
 uint8_t g_pos[3] = {0};
 
 
@@ -53,10 +55,8 @@ void Vision_Init(void)
     HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
 }
 
-void Vision_Start(void)
+void Vision_Start(uint8_t cmd)
 {
-    uint8_t cmd = START_CMD;
-
     g_done = 0;
     g_error = 0;
     Rx_Reset();
@@ -116,6 +116,28 @@ void Vision_Clear(void)
     g_done = 0;
     g_error = 0;
     Rx_Reset();
+}
+
+void Vision_ClearAck(void)
+{
+    g_vision_ack_done = 0;
+}
+
+uint8_t Vision_WaitAck(uint32_t timeout_ms)
+{
+    uint32_t start = HAL_GetTick();
+
+    while ((HAL_GetTick() - start) < timeout_ms)
+    {
+        if (g_vision_ack_done)
+        {
+            g_vision_ack_done = 0;
+            return 1;
+        }
+        osDelay(1);
+    }
+
+    return 0;
 }
 
 void data_receive(uint8_t *pos_out){
